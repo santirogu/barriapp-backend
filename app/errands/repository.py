@@ -26,6 +26,18 @@ async def list_by_client(
     )
 
 
+async def list_by_collaborator(
+    collaborator_id: PydanticObjectId, *, skip: int = 0, limit: int = 20
+) -> list[Errand]:
+    return (
+        await Errand.find(Errand.collaborator_id == collaborator_id)
+        .sort("-created_at")
+        .skip(skip)
+        .limit(limit)
+        .to_list()
+    )
+
+
 async def search_available_near(
     near: tuple[float, float], radius_meters: int, *, limit: int = 20
 ) -> list[Errand]:

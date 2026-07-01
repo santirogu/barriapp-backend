@@ -51,6 +51,17 @@ async def list_available(
     return [ErrandPublic.from_errand(e) for e in errands]
 
 
+@router.get("/assigned", response_model=list[ErrandPublic])
+async def list_assigned(
+    user: CurrentUser,
+    page: int = Query(1, ge=1),
+    limit: int = Query(20, ge=1, le=100),
+) -> list[ErrandPublic]:
+    # Declared before /{errand_id} so "assigned" isn't parsed as an id.
+    errands = await service.list_assigned(user, skip=(page - 1) * limit, limit=limit)
+    return [ErrandPublic.from_errand(e) for e in errands]
+
+
 @router.get("/{errand_id}", response_model=ErrandPublic)
 async def get_errand(errand_id: PydanticObjectId, user: CurrentUser) -> ErrandPublic:
     return ErrandPublic.from_errand(await service.get_errand(user, errand_id))
