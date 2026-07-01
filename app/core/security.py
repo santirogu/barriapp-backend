@@ -15,8 +15,9 @@ from app.core.config import get_settings
 # Argon2 (maintained, modern); no bcrypt 72-byte limitation.
 _password_hasher = PasswordHash.recommended()
 
-ACCESS_TOKEN_TYPE = "access"
-REFRESH_TOKEN_TYPE = "refresh"
+# Token *type* labels (not secrets). nosec: B105 false positive.
+ACCESS_TOKEN_TYPE = "access"  # nosec B105
+REFRESH_TOKEN_TYPE = "refresh"  # nosec B105
 
 
 def hash_password(password: str) -> str:
