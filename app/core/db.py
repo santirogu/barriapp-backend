@@ -27,9 +27,11 @@ def _document_models() -> list[type[Document]]:
     registry in one place as new modules add documents.
     """
     from app.audit.models import AuditLog
+    from app.catalog.models import Category, Product
+    from app.stores.models import Store
     from app.users.models import User
 
-    return [AuditLog, User]
+    return [AuditLog, User, Store, Category, Product]
 
 
 class _DatabaseState:

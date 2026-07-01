@@ -47,6 +47,18 @@ select = ["E", "F", "I", "UP", "B", "C4", "SIM", "ASYNC"]
 [tool.ruff.lint.isort]
 known-first-party = ["app", "tests"]
 
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI dependency-injection markers are called in argument defaults by design.
+extend-immutable-calls = [
+    "fastapi.Query",
+    "fastapi.Path",
+    "fastapi.Body",
+    "fastapi.Header",
+    "fastapi.Cookie",
+    "fastapi.Depends",
+    "fastapi.Security",
+]
+
 [tool.mypy]
 python_version = "3.12"
 plugins = ["pydantic.mypy"]

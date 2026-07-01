@@ -7,9 +7,13 @@ from fastapi import APIRouter
 
 from app.api.v1 import health
 from app.auth.router import router as auth_router
+from app.catalog.router import router as catalog_router
+from app.stores.router import router as stores_router
 from app.users.router import router as users_router
 
 api_router = APIRouter()
 api_router.include_router(health.router)
 api_router.include_router(auth_router, prefix="/auth")
 api_router.include_router(users_router)
+api_router.include_router(stores_router)
+api_router.include_router(catalog_router)
