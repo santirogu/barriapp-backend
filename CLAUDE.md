@@ -58,6 +58,12 @@ Helper skills that encode the canonical patterns (reference: `app/users` + `app/
 - `add-endpoint` — new route per API_CONTRACT (RBAC + ownership + audit + traceable test)
 - `implement-story` — full vertical slice for a backlog ID (e.g. O-1), gates + PR into develop
 
+## Frontend / mobile contracts
+Each implemented module has a `FRONTEND.md` in its folder documenting the **real**
+endpoints/models for web & mobile teams: `app/auth/FRONTEND.md`,
+`app/users/FRONTEND.md`, `app/stores/FRONTEND.md`, `app/catalog/FRONTEND.md`.
+Keep them in sync with the code as modules evolve.
+
 ## Working notes
 - The user (Santiago) prefers to plan/refine before implementing.
 - Communicate in **Spanish**; all code and docs in English.

@@ -33,7 +33,10 @@ the users+auth module (`app/users`, `app/auth`, `app/audit`) delivered in PR #1.
    - Tag every test with `@pytest.mark.req("<ID>")`.
    - Reference: `tests/test_stores_unit.py`, `tests/test_service_unit.py`,
      `tests/integration/test_stores.py`, `tests/integration/test_catalog.py`.
-7. **Gates** — all must be green:
+7. **Frontend contract** — create/update `app/<module>/FRONTEND.md` with the real
+   endpoints/models/enums/errors the story adds or changes (reference:
+   `app/stores/FRONTEND.md`). Web & mobile build against this.
+8. **Gates** — all must be green:
    ```bash
    uv run ruff check . && uv run ruff format . && uv run mypy app && uv run pytest -q
    ```
@@ -45,8 +48,8 @@ the users+auth module (`app/users`, `app/auth`, `app/audit`) delivered in PR #1.
 ## Definition of done (mirror docs/MVP_BACKLOG.md)
 **Unit tests** (pure logic + authz, run without Docker) **and integration tests**
 (testcontainers) green · coverage of the acceptance criteria · audit events
-recorded and asserted · RBAC/ownership enforced · gates pass · PR opened into
-`develop` and traced to the story ID.
+recorded and asserted · RBAC/ownership enforced · **`app/<module>/FRONTEND.md`
+created/updated** · gates pass · PR opened into `develop` and traced to the story ID.
 
 ## Related skills
 `scaffold-module`, `add-model`, `add-endpoint`.
