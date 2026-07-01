@@ -16,7 +16,7 @@ from testcontainers.mongodb import MongoDbContainer
 from testcontainers.redis import RedisContainer
 
 from app.core.config import get_settings
-from app.core.db import close_db, init_db
+from app.core.db import close_db, get_database, init_db
 from app.core.redis_client import close_redis, get_redis, init_redis
 from app.main import create_app
 
@@ -71,6 +71,14 @@ async def api(_services: None) -> AsyncIterator[AsyncClient]:
     settings = get_settings()
     await init_db(settings)
     await init_redis(settings)
+
+    # Clean slate for isolation: the containers are shared across the session, so
+    # wipe data (keeping indexes) and Redis before each test.
+    database = get_database()
+    for name in await database.list_collection_names():
+        await database[name].delete_many({})
+    await get_redis().flushdb()
+
     app = create_app()
     transport = ASGITransport(app=app)
     try:
