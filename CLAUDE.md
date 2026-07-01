@@ -50,6 +50,15 @@ One identity (`users`) can hold multiple roles: `super_admin`, `seller` (tendero
 - [docs/REVENUE_PROJECTION.md](docs/REVENUE_PROJECTION.md) — illustrative year-1 revenue projection (adjustable assumptions)
 - [docs/TEST_STRATEGY.md](docs/TEST_STRATEGY.md) — QA/test strategy (shift-left, all test levels, tooling, reporting, traceability)
 
+## Development skills (`.claude/skills/`)
+Helper skills that encode the canonical patterns (reference: `app/users` + `app/auth`
++ `app/audit`). Invoke with `/<name>`:
+- `scaffold-module` — new domain module (models/schemas/repository/service/router + audit + tests)
+- `add-model` — new/extended Beanie model per DATA_MODEL conventions (indexes, geo, partial-unique)
+- `add-endpoint` — new route per API_CONTRACT (RBAC + ownership + audit + traceable test)
+- `implement-story` — full vertical slice for a backlog ID (e.g. O-1), gates + PR into develop
+
 ## Working notes
 - The user (Santiago) prefers to plan/refine before implementing.
-- Communicate in **Spanish**; architecture doc is in English by request.
+- Communicate in **Spanish**; all code and docs in English.
+- Git Flow: work on `feature/*` from `develop`; PR into `develop` (protected: PR + green CI).
