@@ -5,27 +5,29 @@ Delivery platform for **small neighborhood stores ("tiendas de barrio")** in
 collaborators earn money running short favors nearby. Niche underserved by
 Rappi/Didi. Mobile-first, with web access.
 
-> **Status: DESIGN / PLANNING phase.** No implementation code yet. This repo
-> currently holds design docs only. Do not scaffold code unless asked.
+> **Status: IMPLEMENTED — MVP + phase-2 AI.** All MVP modules and the AI assistant
+> are built and tested. Run locally with `docker compose up --build`
+> (→ http://localhost:8000/docs); gates: `uv run ruff check . && uv run mypy app && uv run pytest -q`.
+> See "Implementation status" below.
 
 ## Roles
 One identity (`users`) can hold multiple roles: `super_admin`, `seller` (tendero),
 `collaborator` (repartidor/mandadero), `client`.
 
 ## Stack (decided)
-- **Backend:** Python 3.12 · FastAPI (async) · Beanie ODM · MongoDB Atlas · Redis · ARQ/Celery · WebSockets
+- **Backend:** Python 3.12 (pinned) · **uv** · FastAPI (async) · Beanie 2.x on **PyMongo async** (Motor deprecated) · MongoDB · Redis · WebSockets
 - **Clients:** React Native + Expo (mobile + web via react-native-web) — chosen for team's JS/React skills
 - **Admin panel:** Next.js + React
 - **Payments (Colombia):** Wompi + cash on delivery
 - **Maps:** Mapbox · **Push:** FCM · **Storage:** Cloudflare R2 · **Errors:** Sentry
-- **AI (phase 2):** RAG with Claude API + MongoDB Atlas Vector Search + tool calling
+- **AI:** RAG assistant + tool-calling — **implemented** (`app/ai`); Claude API when configured, deterministic offline fallback otherwise
 - **Deploy MVP:** Docker → Railway/Render; **scale:** Cloud Run/ECS Fargate + Terraform
 - **CI/CD:** GitHub Actions
 
 ## Key decisions & constraints
 - Market: **Colombia** (payments, legal, invoicing all CO-specific).
 - MVP approach: **balanced** — ship fast but on solid foundations.
-- AI assistant: **designed-in from day one**, implemented in phase 2.
+- AI assistant: **shipped** — RAG + tool-calling grounded in BarriApp data.
 - Legal (critical): Habeas Data Ley 1581 + SIC/RNBD registration; DIAN e-invoicing
   for commissions; **collaborator contractor-vs-employee classification is the top
   legal risk** — needs local counsel.
@@ -33,6 +35,19 @@ One identity (`users`) can hold multiple roles: `super_admin`, `seller` (tendero
   recorded in an append-only `audit_logs`, **readable only by `super_admin`**
   (login, user creation/deactivation, and every module's state changes). Central
   `audit/` service; no update/delete API. See docs/AUDIT_LOG.md.
+
+## Implementation status
+All MVP modules + the phase-2 AI assistant are implemented and tested (unit +
+integration via testcontainers; `ruff`/`mypy`/`pytest` gates; GitHub Actions CI):
+`audit · users · auth · stores · catalog · orders · collaborators · delivery ·
+payments · errands · reviews · notifications · admin · settlements · subscriptions · ai`
+(plus `core` infra).
+- **Module layout:** `app/<module>/` = `models.py · schemas.py · repository.py ·
+  service.py · router.py` (+ `logic.py` for pure/unit-tested logic, `FRONTEND.md` contract).
+- **Tests:** fast unit tests run without Docker (`uv run pytest -m "not integration"`);
+  integration tests use testcontainers (Mongo + Redis) and wipe state per test.
+- **Deferred:** real Wompi recurring billing / refunds / payouts, Atlas Vector Search
+  at scale, audit export, response streaming, WS live-stream E2E test.
 
 ## Design docs
 - [docs/README.md](docs/README.md) — **documentation index** (start here)
@@ -65,6 +80,8 @@ endpoints/models for web & mobile teams (`app/<module>/FRONTEND.md`).
 Keep them in sync with the code as modules evolve.
 
 ## Working notes
-- The user (Santiago) prefers to plan/refine before implementing.
+- The user (Santiago) likes to review/refine before big changes; build module by
+  module via the skills, one PR per module into `develop`.
 - Communicate in **Spanish**; all code and docs in English.
-- Git Flow: work on `feature/*` from `develop`; PR into `develop` (protected: PR + green CI).
+- Git Flow: work on `feature/*` (or `docs/*`) from `develop`; PR into `develop`
+  (protected: PR + green CI). `master` is production; promote via release PRs.
