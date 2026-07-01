@@ -68,6 +68,12 @@ async def list_mine(user: User, *, skip: int, limit: int) -> list[Errand]:
     return await errands_repo.list_by_client(user.id, skip=skip, limit=limit)
 
 
+async def list_assigned(user: User, *, skip: int, limit: int) -> list[Errand]:
+    """Errands the caller accepted as a collaborator (to track/advance them)."""
+    assert user.id is not None
+    return await errands_repo.list_by_collaborator(user.id, skip=skip, limit=limit)
+
+
 async def get_errand(user: User, errand_id: PydanticObjectId) -> Errand:
     errand = await _load(errand_id)
     if _is_admin(user) or user.id in (errand.client_id, errand.collaborator_id):

@@ -60,6 +60,10 @@ async def test_publish_browse_accept_complete_and_settle(
     assert (await api.post(f"/api/v1/errands/{errand_id}/accept", headers=collab_h)).json()[
         "status"
     ] == "assigned"
+
+    # the collaborator can now list it under their assigned errands
+    assigned = await api.get("/api/v1/errands/assigned", headers=collab_h)
+    assert errand_id in [e["id"] for e in assigned.json()]
     assert (
         await api.post(
             f"/api/v1/errands/{errand_id}/status", json={"status": "in_progress"}, headers=collab_h
