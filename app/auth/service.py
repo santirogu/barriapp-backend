@@ -8,7 +8,7 @@ from datetime import UTC, datetime
 
 from beanie import PydanticObjectId
 from fastapi import status
-from jose import JWTError
+from jwt import PyJWTError
 
 from app.audit import service as audit
 from app.audit.models import AuditModule, AuditResult, AuditSeverity
@@ -161,7 +161,7 @@ async def login(data: LoginRequest) -> TokenResponse:
 async def refresh(refresh_token: str) -> TokenResponse:
     try:
         payload = decode_token(refresh_token)
-    except JWTError as exc:
+    except PyJWTError as exc:
         raise AppError(
             "Invalid or expired token",
             code="invalid_token",

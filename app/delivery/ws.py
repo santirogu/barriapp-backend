@@ -9,7 +9,7 @@ import structlog
 from beanie import PydanticObjectId
 from bson.errors import InvalidId
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from jose import JWTError
+from jwt import PyJWTError
 
 from app.core.errors import AppError
 from app.core.redis_client import get_redis
@@ -35,7 +35,7 @@ async def resolve_ws_user(token: str | None) -> User | None:
         return None
     try:
         payload = decode_token(token)
-    except JWTError:
+    except PyJWTError:
         return None
     if payload.get("type") != ACCESS_TOKEN_TYPE:
         return None
