@@ -31,10 +31,22 @@ def _document_models() -> list[type[Document]]:
     from app.collaborators.models import CollaboratorProfile
     from app.delivery.models import Delivery
     from app.orders.models import Order
+    from app.payments.models import LedgerEntry, Payment
     from app.stores.models import Store
     from app.users.models import User
 
-    return [AuditLog, User, Store, Category, Product, Order, CollaboratorProfile, Delivery]
+    return [
+        AuditLog,
+        User,
+        Store,
+        Category,
+        Product,
+        Order,
+        CollaboratorProfile,
+        Delivery,
+        Payment,
+        LedgerEntry,
+    ]
 
 
 class _DatabaseState:

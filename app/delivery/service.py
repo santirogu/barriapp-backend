@@ -19,6 +19,7 @@ from app.delivery.models import Delivery, DeliveryProof, DeliveryStatus, RefType
 from app.delivery.schemas import DeliveryStatusUpdate, LocationUpdate, ProofUpload
 from app.orders import repository as orders_repo
 from app.orders.models import Order, OrderStatus, StatusEvent
+from app.orders.models import PaymentMethod as OrderPaymentMethod
 from app.stores import repository as stores_repo
 from app.users.models import GeoPoint, Role, User
 from app.users.service import primary_role
@@ -139,6 +140,14 @@ async def advance_status(
         if order is not None:
             _record_order_status(order, order_status, user.id)
             await order.save()
+            # On cash delivery, settle the payment and write the ledger.
+            if (
+                data.status == DeliveryStatus.DELIVERED
+                and order.payment_method == OrderPaymentMethod.CASH
+            ):
+                from app.payments import service as payments_service
+
+                await payments_service.settle_order_payment(order)
 
     if data.status == DeliveryStatus.DELIVERED:
         assert user.id is not None
