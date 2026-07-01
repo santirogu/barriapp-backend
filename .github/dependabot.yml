@@ -1,0 +1,35 @@
+# Dependabot config: keeps dependencies patched and opens PRs into `develop`.
+# Security updates (driven by Dependabot alerts) are always raised regardless of
+# the schedule below; these entries add scheduled *version* updates too.
+version: 2
+updates:
+  # Python dependencies (uv — reads pyproject.toml + uv.lock).
+  - package-ecosystem: "uv"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "America/Bogota"
+    target-branch: "develop"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      # Batch minor/patch bumps into one PR to reduce noise; majors stay separate.
+      python-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
+  # GitHub Actions used by our CI/security workflows.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "America/Bogota"
+    target-branch: "develop"
+    commit-message:
+      prefix: "chore(ci)"
