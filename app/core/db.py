@@ -27,6 +27,7 @@ def _document_models() -> list[type[Document]]:
     registry in one place as new modules add documents.
     """
     from app.admin.models import PlatformConfig
+    from app.ai.models import AiConversation, AiKnowledge
     from app.audit.models import AuditLog
     from app.catalog.models import Category, Product
     from app.collaborators.models import CollaboratorProfile
@@ -58,6 +59,8 @@ def _document_models() -> list[type[Document]]:
         PlatformConfig,
         Settlement,
         Subscription,
+        AiKnowledge,
+        AiConversation,
     ]
 
 
