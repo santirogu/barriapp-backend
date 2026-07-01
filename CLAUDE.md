@@ -59,9 +59,9 @@ Helper skills that encode the canonical patterns (reference: `app/users` + `app/
 - `implement-story` — full vertical slice for a backlog ID (e.g. O-1), gates + PR into develop
 
 ## Frontend / mobile contracts
-Each implemented module has a `FRONTEND.md` in its folder documenting the **real**
-endpoints/models for web & mobile teams: `app/auth/FRONTEND.md`,
-`app/users/FRONTEND.md`, `app/stores/FRONTEND.md`, `app/catalog/FRONTEND.md`.
+Onboarding guide: `docs/FRONTEND_ONBOARDING.md` (start here). Each implemented
+module also has a `FRONTEND.md` in its folder documenting the **real**
+endpoints/models for web & mobile teams (`app/<module>/FRONTEND.md`).
 Keep them in sync with the code as modules evolve.
 
 ## Working notes
