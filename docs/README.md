@@ -25,6 +25,11 @@ Delivery platform for **small neighborhood stores ("tiendas de barrio")** in
 | [DATA_MODEL.md](DATA_MODEL.md) | Data model: collections, relationships, indexes, ER diagram |
 | [API_CONTRACT.md](API_CONTRACT.md) | API contract v1: endpoints, roles, conventions |
 
+### For the frontend / mobile teams
+| Doc | What it covers |
+|-----|----------------|
+| [FRONTEND_ONBOARDING.md](FRONTEND_ONBOARDING.md) | **Start here** — API conventions, auth, core journeys, module map, real-time & AI. Per-module contracts live in `app/<module>/FRONTEND.md`. |
+
 ### Product flows
 | Doc | What it covers |
 |-----|----------------|
