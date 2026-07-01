@@ -44,6 +44,7 @@ class ChatResponse(BaseModel):
     answer: str
     conversation_id: str
     sources: list[SourceRef]
+    tools_used: list[str] = Field(default_factory=list)
 
 
 class ConversationPublic(BaseModel):
