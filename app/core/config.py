@@ -61,6 +61,9 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 30
     refresh_token_expire_days: int = 30
 
+    # Commerce
+    default_commission_rate: float = 0.10  # platform commission when a store has no override
+
     # Observability
     sentry_dsn: str | None = None
 

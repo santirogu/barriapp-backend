@@ -28,10 +28,11 @@ def _document_models() -> list[type[Document]]:
     """
     from app.audit.models import AuditLog
     from app.catalog.models import Category, Product
+    from app.orders.models import Order
     from app.stores.models import Store
     from app.users.models import User
 
-    return [AuditLog, User, Store, Category, Product]
+    return [AuditLog, User, Store, Category, Product, Order]
 
 
 class _DatabaseState:
