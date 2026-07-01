@@ -24,6 +24,9 @@ venv/
 coverage.xml
 htmlcov/
 
+# Security scan artifacts
+*.sarif
+
 # IDE / OS
 .idea/
 .vscode/
