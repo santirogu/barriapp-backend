@@ -1,0 +1,259 @@
+{
+  "info": {
+    "_postman_id": "b0a11a9e-0000-4000-8000-barriapp0001",
+    "name": "BarriApp API",
+    "description": "BarriApp backend (v1). Import together with 'BarriApp — Local' environment. Flow: Auth > Register, then Verify OTP (paste the code from the server log into {{otp_code}}) — tokens are captured automatically. See docs/FRONTEND_ONBOARDING.md.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8000/api/v1" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        { "name": "Liveness", "request": { "method": "GET", "url": { "raw": "{{base_url}}/health", "host": ["{{base_url}}"], "path": ["health"] } } },
+        { "name": "Readiness", "request": { "method": "GET", "url": { "raw": "{{base_url}}/health/ready", "host": ["{{base_url}}"], "path": ["health", "ready"] } } }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"phone\": \"{{phone}}\",\n  \"password\": \"{{password}}\",\n  \"full_name\": \"Ana Pérez\",\n  \"accept_habeas_data\": true\n}" },
+            "url": { "raw": "{{base_url}}/auth/register", "host": ["{{base_url}}"], "path": ["auth", "register"] },
+            "description": "In dev the OTP code is printed to the server log; copy it into {{otp_code}} before Verify OTP."
+          }
+        },
+        {
+          "name": "Verify OTP (captures tokens)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "const j = pm.response.json();",
+            "if (j.access_token) {",
+            "  pm.environment.set('access_token', j.access_token);",
+            "  pm.environment.set('refresh_token', j.refresh_token);",
+            "  console.log('tokens saved');",
+            "}"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"phone\": \"{{phone}}\",\n  \"code\": \"{{otp_code}}\"\n}" },
+            "url": { "raw": "{{base_url}}/auth/verify-otp", "host": ["{{base_url}}"], "path": ["auth", "verify-otp"] }
+          }
+        },
+        {
+          "name": "Login (captures tokens)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "const j = pm.response.json();",
+            "if (j.access_token) {",
+            "  pm.environment.set('access_token', j.access_token);",
+            "  pm.environment.set('refresh_token', j.refresh_token);",
+            "}"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"phone\": \"{{phone}}\",\n  \"password\": \"{{password}}\"\n}" },
+            "url": { "raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "Refresh",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "const j = pm.response.json();",
+            "if (j.access_token) { pm.environment.set('access_token', j.access_token); }"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}" },
+            "url": { "raw": "{{base_url}}/auth/refresh", "host": ["{{base_url}}"], "path": ["auth", "refresh"] }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": { "raw": "{{base_url}}/auth/logout", "host": ["{{base_url}}"], "path": ["auth", "logout"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        { "name": "Get me", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }], "url": { "raw": "{{base_url}}/me", "host": ["{{base_url}}"], "path": ["me"] } } },
+        { "name": "Update me", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"full_name\": \"Ana P.\"\n}" }, "url": { "raw": "{{base_url}}/me", "host": ["{{base_url}}"], "path": ["me"] } } },
+        { "name": "Register device token", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"token\": \"fcm-demo-token\"\n}" }, "url": { "raw": "{{base_url}}/me/device-tokens", "host": ["{{base_url}}"], "path": ["me", "device-tokens"] } } }
+      ]
+    },
+    {
+      "name": "Stores",
+      "item": [
+        {
+          "name": "Create store (captures store_id, grants seller)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "const j = pm.response.json();",
+            "if (j.id) { pm.environment.set('store_id', j.id); }"
+          ] } }],
+          "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Tienda Ana\",\n  \"location\": { \"line\": \"Cra 10 #20-30\", \"geo\": { \"type\": \"Point\", \"coordinates\": [-74.081, 4.609] } }\n}" }, "url": { "raw": "{{base_url}}/stores", "host": ["{{base_url}}"], "path": ["stores"] } }
+        },
+        { "name": "Search stores (near)", "request": { "method": "GET", "url": { "raw": "{{base_url}}/stores?near=-74.081,4.609&radius=3000", "host": ["{{base_url}}"], "path": ["stores"], "query": [{ "key": "near", "value": "-74.081,4.609" }, { "key": "radius", "value": "3000" }] } } },
+        { "name": "Get store", "request": { "method": "GET", "url": { "raw": "{{base_url}}/stores/{{store_id}}", "host": ["{{base_url}}"], "path": ["stores", "{{store_id}}"] } } },
+        { "name": "Open store", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"status\": \"open\"\n}" }, "url": { "raw": "{{base_url}}/stores/{{store_id}}/status", "host": ["{{base_url}}"], "path": ["stores", "{{store_id}}", "status"] } } }
+      ]
+    },
+    {
+      "name": "Catalog",
+      "item": [
+        { "name": "List categories", "request": { "method": "GET", "url": { "raw": "{{base_url}}/categories", "host": ["{{base_url}}"], "path": ["categories"] } } },
+        {
+          "name": "Create product (captures product_id)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "const j = pm.response.json();",
+            "if (j.id) { pm.environment.set('product_id', j.id); }"
+          ] } }],
+          "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Arroz 500g\",\n  \"price\": 3500,\n  \"unit\": \"und\",\n  \"stock\": 20\n}" }, "url": { "raw": "{{base_url}}/stores/{{store_id}}/products", "host": ["{{base_url}}"], "path": ["stores", "{{store_id}}", "products"] } }
+        },
+        { "name": "List store products", "request": { "method": "GET", "url": { "raw": "{{base_url}}/stores/{{store_id}}/products?available_only=true", "host": ["{{base_url}}"], "path": ["stores", "{{store_id}}", "products"], "query": [{ "key": "available_only", "value": "true" }] } } },
+        { "name": "Update product (toggle availability)", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"is_available\": false\n}" }, "url": { "raw": "{{base_url}}/products/{{product_id}}", "host": ["{{base_url}}"], "path": ["products", "{{product_id}}"] } } }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "Create order (captures order_id)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "const j = pm.response.json();",
+            "if (j.id) { pm.environment.set('order_id', j.id); }"
+          ] } }],
+          "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"store_id\": \"{{store_id}}\",\n  \"items\": [{ \"product_id\": \"{{product_id}}\", \"qty\": 2 }],\n  \"delivery_address\": { \"label\": \"Casa\", \"line\": \"Cra 9 #1-1\", \"geo\": { \"type\": \"Point\", \"coordinates\": [-74.081, 4.609] } },\n  \"payment_method\": \"cash\"\n}" }, "url": { "raw": "{{base_url}}/orders", "host": ["{{base_url}}"], "path": ["orders"] } }
+        },
+        { "name": "List my orders", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }], "url": { "raw": "{{base_url}}/orders", "host": ["{{base_url}}"], "path": ["orders"] } } },
+        { "name": "Get order", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }], "url": { "raw": "{{base_url}}/orders/{{order_id}}", "host": ["{{base_url}}"], "path": ["orders", "{{order_id}}"] } } },
+        { "name": "Accept order (seller)", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }], "url": { "raw": "{{base_url}}/orders/{{order_id}}/accept", "host": ["{{base_url}}"], "path": ["orders", "{{order_id}}", "accept"] } } },
+        { "name": "Advance status (preparing)", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"status\": \"preparing\"\n}" }, "url": { "raw": "{{base_url}}/orders/{{order_id}}/status", "host": ["{{base_url}}"], "path": ["orders", "{{order_id}}", "status"] } } },
+        { "name": "Advance status (ready)", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"status\": \"ready\"\n}" }, "url": { "raw": "{{base_url}}/orders/{{order_id}}/status", "host": ["{{base_url}}"], "path": ["orders", "{{order_id}}", "status"] } } },
+        { "name": "Cancel order", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"reason\": \"changed mind\"\n}" }, "url": { "raw": "{{base_url}}/orders/{{order_id}}/cancel", "host": ["{{base_url}}"], "path": ["orders", "{{order_id}}", "cancel"] } } }
+      ]
+    },
+    {
+      "name": "Collaborators",
+      "item": [
+        { "name": "Become collaborator", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"vehicle_type\": \"bike\",\n  \"id_number\": \"1032456789\"\n}" }, "url": { "raw": "{{base_url}}/me/become-collaborator", "host": ["{{base_url}}"], "path": ["me", "become-collaborator"] } } },
+        { "name": "Get my collaborator profile", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }], "url": { "raw": "{{base_url}}/collaborator/me", "host": ["{{base_url}}"], "path": ["collaborator", "me"] } } },
+        { "name": "Set availability (online)", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"status\": \"online\",\n  \"lng\": -74.081,\n  \"lat\": 4.609\n}" }, "url": { "raw": "{{base_url}}/collaborator/availability", "host": ["{{base_url}}"], "path": ["collaborator", "availability"] } } },
+        { "name": "Verify collaborator (admin)", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"status\": \"approved\"\n}" }, "url": { "raw": "{{base_url}}/collaborator/{{user_id}}/verification", "host": ["{{base_url}}"], "path": ["collaborator", "{{user_id}}", "verification"] } } }
+      ]
+    },
+    {
+      "name": "Delivery",
+      "item": [
+        {
+          "name": "Assign order (captures delivery_id)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "const j = pm.response.json();",
+            "if (j.id) { pm.environment.set('delivery_id', j.id); }"
+          ] } }],
+          "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }], "url": { "raw": "{{base_url}}/orders/{{order_id}}/assign", "host": ["{{base_url}}"], "path": ["orders", "{{order_id}}", "assign"] } }
+        },
+        { "name": "Get delivery", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }], "url": { "raw": "{{base_url}}/deliveries/{{delivery_id}}", "host": ["{{base_url}}"], "path": ["deliveries", "{{delivery_id}}"] } } },
+        { "name": "Advance delivery status", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"status\": \"en_route_pickup\"\n}" }, "url": { "raw": "{{base_url}}/deliveries/{{delivery_id}}/status", "host": ["{{base_url}}"], "path": ["deliveries", "{{delivery_id}}", "status"] } } },
+        { "name": "Update location", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"lng\": -74.080,\n  \"lat\": 4.610\n}" }, "url": { "raw": "{{base_url}}/deliveries/{{delivery_id}}/location", "host": ["{{base_url}}"], "path": ["deliveries", "{{delivery_id}}", "location"] } } },
+        { "name": "Upload proof", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"photo_url\": \"https://img/proof.jpg\",\n  \"received_by\": \"Ana\"\n}" }, "url": { "raw": "{{base_url}}/deliveries/{{delivery_id}}/proof", "host": ["{{base_url}}"], "path": ["deliveries", "{{delivery_id}}", "proof"] } } },
+        { "name": "My collaborator jobs", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }], "url": { "raw": "{{base_url}}/collaborator/jobs", "host": ["{{base_url}}"], "path": ["collaborator", "jobs"] } } }
+      ]
+    },
+    {
+      "name": "Payments",
+      "item": [
+        { "name": "Create Wompi intent", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"order_id\": \"{{order_id}}\"\n}" }, "url": { "raw": "{{base_url}}/payments/intent", "host": ["{{base_url}}"], "path": ["payments", "intent"] }, "description": "Only for orders with payment_method 'wompi'." } },
+        { "name": "Wompi webhook (signed)", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Event-Signature", "value": "<hmac-of-reference.transaction_id.status>" }], "body": { "mode": "raw", "raw": "{\n  \"reference\": \"BA-<order_code>\",\n  \"transaction_id\": \"txn_1\",\n  \"status\": \"APPROVED\"\n}" }, "url": { "raw": "{{base_url}}/payments/webhook/wompi", "host": ["{{base_url}}"], "path": ["payments", "webhook", "wompi"] }, "description": "Server-to-server. Signature = HMAC-SHA256 of 'reference.transaction_id.status' with WOMPI_EVENTS_SECRET." } },
+        { "name": "Get payment", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }], "url": { "raw": "{{base_url}}/payments/{{payment_id}}", "host": ["{{base_url}}"], "path": ["payments", "{{payment_id}}"] } } }
+      ]
+    },
+    {
+      "name": "Errands",
+      "item": [
+        {
+          "name": "Create errand (captures errand_id)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "const j = pm.response.json();",
+            "if (j.id) { pm.environment.set('errand_id', j.id); }"
+          ] } }],
+          "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"title\": \"Comprar arroz y aceite\",\n  \"dropoff\": { \"label\": \"Casa\", \"line\": \"Cra 9\", \"geo\": { \"type\": \"Point\", \"coordinates\": [-74.081, 4.609] } },\n  \"offered_fee\": 8000,\n  \"estimated_cost\": 20000\n}" }, "url": { "raw": "{{base_url}}/errands", "host": ["{{base_url}}"], "path": ["errands"] } }
+        },
+        { "name": "My errands", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }], "url": { "raw": "{{base_url}}/errands", "host": ["{{base_url}}"], "path": ["errands"] } } },
+        { "name": "Available errands (collaborator)", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }], "url": { "raw": "{{base_url}}/errands/available?near=-74.081,4.609&radius=4000", "host": ["{{base_url}}"], "path": ["errands", "available"], "query": [{ "key": "near", "value": "-74.081,4.609" }, { "key": "radius", "value": "4000" }] } } },
+        { "name": "Accept errand (collaborator)", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }], "url": { "raw": "{{base_url}}/errands/{{errand_id}}/accept", "host": ["{{base_url}}"], "path": ["errands", "{{errand_id}}", "accept"] } } },
+        { "name": "Advance errand (completed)", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"status\": \"in_progress\"\n}" }, "url": { "raw": "{{base_url}}/errands/{{errand_id}}/status", "host": ["{{base_url}}"], "path": ["errands", "{{errand_id}}", "status"] } } },
+        { "name": "Cancel errand", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"reason\": \"ya no\"\n}" }, "url": { "raw": "{{base_url}}/errands/{{errand_id}}/cancel", "host": ["{{base_url}}"], "path": ["errands", "{{errand_id}}", "cancel"] } } }
+      ]
+    },
+    {
+      "name": "Reviews",
+      "item": [
+        { "name": "Create review (after delivery)", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"order_id\": \"{{order_id}}\",\n  \"target_type\": \"store\",\n  \"stars\": 5,\n  \"comment\": \"Muy bien\"\n}" }, "url": { "raw": "{{base_url}}/reviews", "host": ["{{base_url}}"], "path": ["reviews"] } } },
+        { "name": "List store reviews", "request": { "method": "GET", "url": { "raw": "{{base_url}}/stores/{{store_id}}/reviews", "host": ["{{base_url}}"], "path": ["stores", "{{store_id}}", "reviews"] } } }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        { "name": "List", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }], "url": { "raw": "{{base_url}}/notifications", "host": ["{{base_url}}"], "path": ["notifications"] } } },
+        { "name": "Unread count", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }], "url": { "raw": "{{base_url}}/notifications/unread-count", "host": ["{{base_url}}"], "path": ["notifications", "unread-count"] } } },
+        { "name": "Mark read", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }], "url": { "raw": "{{base_url}}/notifications/{{notification_id}}/read", "host": ["{{base_url}}"], "path": ["notifications", "{{notification_id}}", "read"] } } }
+      ]
+    },
+    {
+      "name": "Subscriptions",
+      "item": [
+        { "name": "Subscribe (Premium)", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }], "url": { "raw": "{{base_url}}/stores/{{store_id}}/subscription/subscribe", "host": ["{{base_url}}"], "path": ["stores", "{{store_id}}", "subscription", "subscribe"] } } },
+        { "name": "Get subscription", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }], "url": { "raw": "{{base_url}}/stores/{{store_id}}/subscription", "host": ["{{base_url}}"], "path": ["stores", "{{store_id}}", "subscription"] } } },
+        { "name": "Cancel subscription", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }], "url": { "raw": "{{base_url}}/stores/{{store_id}}/subscription/cancel", "host": ["{{base_url}}"], "path": ["stores", "{{store_id}}", "subscription", "cancel"] } } }
+      ]
+    },
+    {
+      "name": "Settlements",
+      "item": [
+        { "name": "Generate settlement (admin)", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"store_id\": \"{{store_id}}\",\n  \"period_start\": \"2026-06-01T00:00:00Z\",\n  \"period_end\": \"2026-06-30T23:59:59Z\"\n}" }, "url": { "raw": "{{base_url}}/admin/settlements", "host": ["{{base_url}}"], "path": ["admin", "settlements"] } } },
+        { "name": "List settlements (admin)", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }], "url": { "raw": "{{base_url}}/admin/settlements", "host": ["{{base_url}}"], "path": ["admin", "settlements"] } } },
+        { "name": "My settlements (seller)", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }], "url": { "raw": "{{base_url}}/settlements", "host": ["{{base_url}}"], "path": ["settlements"] } } }
+      ]
+    },
+    {
+      "name": "Admin",
+      "description": "All admin routes require a super_admin token (promote a user in the DB, then Login and copy access_token into {{admin_token}}).",
+      "item": [
+        { "name": "Metrics", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }], "url": { "raw": "{{base_url}}/admin/metrics", "host": ["{{base_url}}"], "path": ["admin", "metrics"] } } },
+        { "name": "List users", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }], "url": { "raw": "{{base_url}}/admin/users?role=seller", "host": ["{{base_url}}"], "path": ["admin", "users"], "query": [{ "key": "role", "value": "seller" }] } } },
+        { "name": "Set user status", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"status\": \"suspended\"\n}" }, "url": { "raw": "{{base_url}}/admin/users/{{user_id}}/status", "host": ["{{base_url}}"], "path": ["admin", "users", "{{user_id}}", "status"] } } },
+        { "name": "Search audit logs", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }], "url": { "raw": "{{base_url}}/admin/audit-logs?module=orders", "host": ["{{base_url}}"], "path": ["admin", "audit-logs"], "query": [{ "key": "module", "value": "orders" }] } } },
+        { "name": "Get config", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }], "url": { "raw": "{{base_url}}/admin/config", "host": ["{{base_url}}"], "path": ["admin", "config"] } } },
+        { "name": "Update config", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"default_commission_rate\": 0.12\n}" }, "url": { "raw": "{{base_url}}/admin/config", "host": ["{{base_url}}"], "path": ["admin", "config"] } } }
+      ]
+    },
+    {
+      "name": "AI Assistant",
+      "item": [
+        { "name": "Ingest knowledge (admin)", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"content\": \"Puedes pagar en efectivo o con Wompi al recibir tu pedido.\",\n  \"source_type\": \"faq\"\n}" }, "url": { "raw": "{{base_url}}/ai/knowledge", "host": ["{{base_url}}"], "path": ["ai", "knowledge"] } } },
+        {
+          "name": "Chat (captures conversation_id)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "const j = pm.response.json();",
+            "if (j.conversation_id) { pm.environment.set('conversation_id', j.conversation_id); }"
+          ] } }],
+          "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"message\": \"¿Dónde está mi pedido?\"\n}" }, "url": { "raw": "{{base_url}}/ai/chat", "host": ["{{base_url}}"], "path": ["ai", "chat"] } }
+        },
+        { "name": "Get conversation", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }], "url": { "raw": "{{base_url}}/ai/conversations/{{conversation_id}}", "host": ["{{base_url}}"], "path": ["ai", "conversations", "{{conversation_id}}"] } } }
+      ]
+    }
+  ]
+}
