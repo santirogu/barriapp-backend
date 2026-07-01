@@ -17,6 +17,7 @@ from app.notifications.router import router as notifications_router
 from app.orders.router import router as orders_router
 from app.payments.router import router as payments_router
 from app.reviews.router import router as reviews_router
+from app.settlements.router import router as settlements_router
 from app.stores.router import router as stores_router
 from app.users.router import router as users_router
 
@@ -35,3 +36,4 @@ api_router.include_router(errands_router)
 api_router.include_router(reviews_router)
 api_router.include_router(notifications_router)
 api_router.include_router(admin_router)
+api_router.include_router(settlements_router)
