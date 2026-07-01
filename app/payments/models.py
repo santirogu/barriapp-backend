@@ -71,6 +71,7 @@ class LedgerEntry(Document):
     amount: int  # COP
     ref_type: PaymentRefType
     ref_id: PydanticObjectId
+    store_id: PydanticObjectId | None = None  # set on order entries; enables seller settlement
     settled: bool = True  # cash commissions are unsettled until seller settlement
     created_at: datetime = Field(default_factory=_utcnow)
 
@@ -80,4 +81,5 @@ class LedgerEntry(Document):
             IndexModel([("user_id", 1), ("created_at", -1)]),
             IndexModel([("ref_type", 1), ("ref_id", 1)]),
             IndexModel([("type", 1), ("settled", 1)]),
+            IndexModel([("store_id", 1), ("type", 1), ("settled", 1)]),
         ]

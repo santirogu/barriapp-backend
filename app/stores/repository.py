@@ -15,6 +15,10 @@ async def insert(store: Store) -> Store:
     return await store.insert()
 
 
+async def list_by_owner(owner_id: PydanticObjectId) -> list[Store]:
+    return await Store.find(Store.owner_id == owner_id).to_list()
+
+
 def build_search_criteria(
     *,
     near: tuple[float, float] | None = None,

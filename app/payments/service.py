@@ -33,7 +33,10 @@ def _utcnow() -> datetime:
 
 
 async def _write_ledger(
-    lines: list[LedgerLine], ref_type: PaymentRefType, ref_id: PydanticObjectId
+    lines: list[LedgerLine],
+    ref_type: PaymentRefType,
+    ref_id: PydanticObjectId,
+    store_id: PydanticObjectId | None = None,
 ) -> None:
     for line in lines:
         entry = LedgerEntry(
@@ -42,6 +45,7 @@ async def _write_ledger(
             amount=line.amount,
             ref_type=ref_type,
             ref_id=ref_id,
+            store_id=store_id,
             settled=line.settled,
         )
         await payments_repo.insert_ledger(entry)
@@ -67,7 +71,7 @@ async def _ledger_for_order(order: Order, *, settled: bool) -> None:
         settled=settled,
     )
     assert order.id is not None
-    await _write_ledger(lines, PaymentRefType.ORDER, order.id)
+    await _write_ledger(lines, PaymentRefType.ORDER, order.id, store_id=store.id)
 
 
 async def settle_order_payment(order: Order) -> Payment | None:
