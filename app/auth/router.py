@@ -1,6 +1,6 @@
 """Auth endpoints."""
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Depends, status
 
 from app.auth import service
 from app.auth.schemas import (
@@ -11,6 +11,7 @@ from app.auth.schemas import (
     TokenResponse,
     VerifyOtpRequest,
 )
+from app.core.ratelimit import rate_limiter
 
 router = APIRouter(tags=["auth"])
 
@@ -26,7 +27,7 @@ async def verify_otp(data: VerifyOtpRequest) -> TokenResponse:
     return await service.verify_otp(data)
 
 
-@router.post("/login", response_model=TokenResponse)
+@router.post("/login", response_model=TokenResponse, dependencies=[Depends(rate_limiter("login"))])
 async def login(data: LoginRequest) -> TokenResponse:
     return await service.login(data)
 
