@@ -1,0 +1,1 @@
+"""BarriApp backend application package."""
