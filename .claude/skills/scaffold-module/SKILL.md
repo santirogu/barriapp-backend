@@ -39,7 +39,11 @@ mirror their structure and conventions.
    - **Integration** (`tests/integration/test_<module>.py`, testcontainers):
      the DB-backed happy path + a key failure, via the `api` fixture.
    - Tag every test with `@pytest.mark.req("<ID>")`.
-6. **Run the gates** and fix everything until green:
+6. **Frontend contract (required)**: create `app/<module>/FRONTEND.md` documenting
+   the module's **real** endpoints, request/response models, enums, and error codes
+   for the web & mobile teams. Reference: `app/stores/FRONTEND.md`,
+   `app/catalog/FRONTEND.md`. Keep it in sync whenever endpoints change.
+7. **Run the gates** and fix everything until green:
    ```bash
    uv run ruff check . && uv run ruff format . && uv run mypy app && uv run pytest -q
    ```

@@ -43,13 +43,16 @@ Implement an endpoint that matches `docs/API_CONTRACT.md`. **Reference:
      success + the main failure via the `api` fixture; assert the audit entry when
      the action is auditable.
    - Tag every test with `@pytest.mark.req("<ID>")`.
-8. **Gates**: `uv run ruff check . && uv run ruff format . && uv run mypy app && uv run pytest -q`.
+8. **Frontend contract**: update `app/<module>/FRONTEND.md` with the new endpoint
+   (method, path, auth/role, request/response JSON, error codes) so web & mobile
+   stay in sync. Reference: `app/stores/FRONTEND.md`.
+9. **Gates**: `uv run ruff check . && uv run ruff format . && uv run mypy app && uv run pytest -q`.
 
 ## Checklist
 - [ ] Path/role match the contract  - [ ] RBAC + ownership enforced
 - [ ] Audit recorded  - [ ] Standard error shape
 - [ ] **Unit tests** (pure logic + authz, no Docker) **and** **integration test** green
-- [ ] Tests tagged with the backlog ID
+- [ ] Tests tagged with the backlog ID  - [ ] `FRONTEND.md` updated
 
 ## Related skills
 `scaffold-module`, `add-model`, `implement-story`.
