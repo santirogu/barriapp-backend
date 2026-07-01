@@ -29,6 +29,7 @@ Delivery platform for **small neighborhood stores ("tiendas de barrio")** in
 | Doc | What it covers |
 |-----|----------------|
 | [FRONTEND_ONBOARDING.md](FRONTEND_ONBOARDING.md) | **Start here** — API conventions, auth, core journeys, module map, real-time & AI. Per-module contracts live in `app/<module>/FRONTEND.md`. |
+| [CLIENT_SECURITY_SETUP.md](CLIENT_SECURITY_SETUP.md) | Replicate the backend's GitHub security & CI config (Dependabot, CodeQL, Semgrep, secret scanning, branch protection) in the admin (Next.js) and mobile (Expo) repos. |
 
 ### Product flows
 | Doc | What it covers |
