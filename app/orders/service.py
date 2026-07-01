@@ -11,6 +11,8 @@ from app.catalog import repository as catalog_repo
 from app.catalog.models import Product
 from app.core.config import get_settings
 from app.core.errors import AppError
+from app.notifications import service as notifications_service
+from app.notifications.models import NotificationType
 from app.orders import logic
 from app.orders import repository as orders_repo
 from app.orders.models import Order, OrderItem, OrderStatus, StatusEvent
@@ -184,6 +186,13 @@ async def accept_order(user: User, order_id: PydanticObjectId) -> Order:
         target_type="order",
         target_id=order.id,
     )
+    await notifications_service.notify(
+        user_id=order.client_id,
+        type=NotificationType.ORDER_UPDATE,
+        title="Pedido aceptado",
+        body=f"La tienda aceptó tu pedido {order.code}.",
+        data={"order_id": str(order.id), "status": OrderStatus.ACCEPTED.value},
+    )
     return order
 
 
@@ -207,6 +216,13 @@ async def advance_status(user: User, order_id: PydanticObjectId, data: OrderStat
         target_type="order",
         target_id=order.id,
         changes={"before": str(previous), "after": str(data.status)},
+    )
+    await notifications_service.notify(
+        user_id=order.client_id,
+        type=NotificationType.ORDER_UPDATE,
+        title="Pedido actualizado",
+        body=f"Tu pedido {order.code} está {data.status.value}.",
+        data={"order_id": str(order.id), "status": data.status.value},
     )
     return order
 

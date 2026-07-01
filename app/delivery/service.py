@@ -17,6 +17,8 @@ from app.delivery import logic
 from app.delivery import repository as delivery_repo
 from app.delivery.models import Delivery, DeliveryProof, DeliveryStatus, RefType
 from app.delivery.schemas import DeliveryStatusUpdate, LocationUpdate, ProofUpload
+from app.notifications import service as notifications_service
+from app.notifications.models import NotificationType
 from app.orders import repository as orders_repo
 from app.orders.models import Order, OrderStatus, StatusEvent
 from app.orders.models import PaymentMethod as OrderPaymentMethod
@@ -148,6 +150,13 @@ async def advance_status(
                 from app.payments import service as payments_service
 
                 await payments_service.settle_order_payment(order)
+            await notifications_service.notify(
+                user_id=order.client_id,
+                type=NotificationType.DELIVERY_UPDATE,
+                title="Actualización de entrega",
+                body=f"Tu pedido {order.code} está {order_status.value}.",
+                data={"order_id": str(order.id), "status": order_status.value},
+            )
 
     if data.status == DeliveryStatus.DELIVERED:
         assert user.id is not None

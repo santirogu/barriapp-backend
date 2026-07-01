@@ -11,6 +11,7 @@ from app.catalog.router import router as catalog_router
 from app.collaborators.router import router as collaborators_router
 from app.delivery.router import router as delivery_router
 from app.errands.router import router as errands_router
+from app.notifications.router import router as notifications_router
 from app.orders.router import router as orders_router
 from app.payments.router import router as payments_router
 from app.reviews.router import router as reviews_router
@@ -29,3 +30,4 @@ api_router.include_router(delivery_router)
 api_router.include_router(payments_router)
 api_router.include_router(errands_router)
 api_router.include_router(reviews_router)
+api_router.include_router(notifications_router)
