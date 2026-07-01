@@ -71,6 +71,10 @@ class Settings(BaseSettings):
     wompi_events_secret: str = "change-me-wompi-events-secret"
     payment_currency: str = "COP"
 
+    # Security headers
+    enable_hsts: bool = False  # enable Strict-Transport-Security (only behind HTTPS/prod)
+    hsts_max_age: int = 63072000  # 2 years
+
     # Rate limiting (Redis fixed-window, per client IP)
     login_rate_limit: int = 10
     login_rate_window: int = 300  # seconds

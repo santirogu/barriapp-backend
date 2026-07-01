@@ -12,6 +12,8 @@ import structlog
 from starlette.requests import Request
 from starlette.types import ASGIApp
 
+from app.core.config import get_settings
+
 REQUEST_ID_HEADER = "X-Request-ID"
 
 
@@ -50,12 +52,18 @@ class RequestContextMiddleware:
             structlog.contextvars.clear_contextvars()
 
 
-_SECURITY_HEADERS: list[tuple[bytes, bytes]] = [
-    (b"x-content-type-options", b"nosniff"),
-    (b"x-frame-options", b"DENY"),
-    (b"referrer-policy", b"no-referrer"),
-    (b"x-xss-protection", b"0"),
-]
+def build_security_headers(*, enable_hsts: bool, hsts_max_age: int) -> list[tuple[bytes, bytes]]:
+    """Baseline security headers; HSTS is added only when enabled (HTTPS/prod)."""
+    headers: list[tuple[bytes, bytes]] = [
+        (b"x-content-type-options", b"nosniff"),
+        (b"x-frame-options", b"DENY"),
+        (b"referrer-policy", b"no-referrer"),
+        (b"x-xss-protection", b"0"),
+    ]
+    if enable_hsts:
+        value = f"max-age={hsts_max_age}; includeSubDomains".encode()
+        headers.append((b"strict-transport-security", value))
+    return headers
 
 
 class SecurityHeadersMiddleware:
@@ -63,6 +71,10 @@ class SecurityHeadersMiddleware:
 
     def __init__(self, app: ASGIApp) -> None:
         self.app = app
+        settings = get_settings()
+        self._headers = build_security_headers(
+            enable_hsts=settings.enable_hsts, hsts_max_age=settings.hsts_max_age
+        )
 
     async def __call__(self, scope, receive, send):  # type: ignore[no-untyped-def]
         if scope["type"] != "http":
@@ -72,7 +84,7 @@ class SecurityHeadersMiddleware:
         async def send_with_headers(message):  # type: ignore[no-untyped-def]
             if message["type"] == "http.response.start":
                 headers = message.setdefault("headers", [])
-                headers.extend(_SECURITY_HEADERS)
+                headers.extend(self._headers)
             await send(message)
 
         await self.app(scope, receive, send_with_headers)
