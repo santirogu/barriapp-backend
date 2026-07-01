@@ -1,0 +1,36 @@
+name: Release
+
+# Runs after a `develop -> main` release PR is merged. python-semantic-release
+# reads the Conventional Commits since the last tag, computes the next version,
+# updates pyproject.toml + CHANGELOG.md, commits, tags `vX.Y.Z`, and publishes a
+# GitHub Release. Config lives in pyproject.toml ([tool.semantic_release]).
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: write # create the tag, push the release commit, publish the release
+
+jobs:
+  release:
+    name: Semantic release
+    runs-on: ubuntu-latest
+    # Skip the version-bump commit the release itself pushes (marked [skip ci]),
+    # so the workflow never triggers itself.
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # full history + tags are required to compute the bump
+          # Prefer a PAT (RELEASE_TOKEN) so the release commit can be pushed past
+          # branch protection on `main`; falls back to the default token.
+          token: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: Python Semantic Release
+        uses: python-semantic-release/python-semantic-release@v9
+        with:
+          github_token: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}

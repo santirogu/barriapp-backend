@@ -46,6 +46,7 @@ Delivery platform for **small neighborhood stores ("tiendas de barrio")** in
 |-----|----------------|
 | [AUDIT_LOG.md](AUDIT_LOG.md) | Append-only audit trail across all modules (super_admin only) |
 | [TEST_STRATEGY.md](TEST_STRATEGY.md) | QA strategy: shift-left, all test levels, tooling, reporting, traceability |
+| [RELEASE.md](RELEASE.md) | Automated versioning & releases (python-semantic-release, Conventional Commits, `develop → main`) |
 
 ### Business
 | Doc | What it covers |

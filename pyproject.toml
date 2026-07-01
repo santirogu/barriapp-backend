@@ -83,3 +83,29 @@ markers = [
     "req: link a test to one or more backlog story IDs (traceability), e.g. req('O-1')",
     "integration: tests that require Docker (testcontainers: MongoDB, Redis)",
 ]
+
+# --- Release automation (python-semantic-release) ---
+# Runs only on `main` (after a develop -> main release PR). Computes the next
+# version from Conventional Commits, updates pyproject + CHANGELOG, tags and
+# publishes a GitHub Release. See .github/workflows/release.yml.
+[tool.semantic_release]
+version_toml = ["pyproject.toml:project.version"]
+allow_zero_version = true       # project is still in 0.x
+major_on_zero = false           # breaking changes bump the minor until 1.0 is declared manually
+build_command = ""              # app, not a published package: no artifacts to build
+commit_message = "chore(release): {version} [skip ci]"
+commit_author = "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
+tag_format = "v{version}"
+
+[tool.semantic_release.branches.main]
+match = "main"
+
+[tool.semantic_release.changelog]
+exclude_commit_patterns = [
+    "^chore\\(release\\):",     # don't list the release commits themselves
+    "^chore\\(deps\\):",        # Dependabot noise
+    "^chore\\(ci\\):",
+]
+
+[tool.semantic_release.publish]
+upload_to_vcs_release = true    # attach to the GitHub Release (no artifacts, just the release entry)
