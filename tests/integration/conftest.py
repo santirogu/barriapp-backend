@@ -7,7 +7,7 @@ HTTP client wired to the initialized DB/Redis. Requires a running Docker daemon.
 import os
 import shutil
 import subprocess
-from collections.abc import AsyncIterator, Iterator
+from collections.abc import AsyncIterator, Awaitable, Callable, Iterator
 
 import pytest
 import pytest_asyncio
@@ -17,8 +17,10 @@ from testcontainers.redis import RedisContainer
 
 from app.core.config import get_settings
 from app.core.db import close_db, init_db
-from app.core.redis_client import close_redis, init_redis
+from app.core.redis_client import close_redis, get_redis, init_redis
 from app.main import create_app
+
+RegisterUser = Callable[[str], Awaitable[dict[str, str]]]
 
 
 def _ensure_docker_host() -> None:
@@ -77,3 +79,27 @@ async def api(_services: None) -> AsyncIterator[AsyncClient]:
     finally:
         await close_redis()
         await close_db()
+
+
+@pytest_asyncio.fixture
+async def register_user(api: AsyncClient) -> RegisterUser:
+    """Return a helper that registers + OTP-verifies a user and yields their tokens."""
+
+    async def _register(phone: str) -> dict[str, str]:
+        resp = await api.post(
+            "/api/v1/auth/register",
+            json={
+                "phone": phone,
+                "password": "supersecret",
+                "full_name": "Test User",
+                "accept_habeas_data": True,
+            },
+        )
+        assert resp.status_code == 201, resp.text
+        code = await get_redis().get(f"otp:{phone}")
+        resp = await api.post("/api/v1/auth/verify-otp", json={"phone": phone, "code": code})
+        assert resp.status_code == 200, resp.text
+        tokens: dict[str, str] = resp.json()
+        return tokens
+
+    return _register

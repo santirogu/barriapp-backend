@@ -35,6 +35,10 @@ Add a `Document` (or embedded `BaseModel`) consistent with `docs/DATA_MODEL.md`.
 ## Notes
 - Beanie 2.x uses PyMongo's native async client (not Motor).
 - Never store secrets in models; PII fields must be handled per `docs/AUDIT_LOG.md`.
+- **Testing:** any non-trivial custom validator/computed logic on the model gets a
+  **unit test** (pure, no DB — Beanie docs can't be instantiated without
+  `init_beanie`, so test the validator/function directly). Index/persistence
+  behavior is covered by the module's **integration** tests.
 
 ## Related skills
 `scaffold-module`, `add-endpoint`.

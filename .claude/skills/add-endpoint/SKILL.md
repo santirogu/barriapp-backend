@@ -33,14 +33,23 @@ Implement an endpoint that matches `docs/API_CONTRACT.md`. **Reference:
    Record failures too where security-relevant (see `app/auth/service.py`).
 6. **Errors**: responses use the standard shape `{ "error": { "code", "message", "details"? } }`
    automatically via `AppError` / the registered handlers — don't hand-roll error bodies.
-7. **Test** (`tests/integration/test_<module>.py`): cover success + the main
-   failure (authz/validation). Tag with the backlog id: `@pytest.mark.req("<ID>")`.
-   Assert the audit entry when the action is auditable.
+7. **Test — two levels are REQUIRED:**
+   - **Unit** (`tests/test_<module>_*.py`, no DB): the endpoint's pure logic
+     (query/body parsing, calculations) and each **authorization branch** (e.g.
+     non-owner → 403). Extract pure helpers; for authz use duck-typed stand-ins +
+     `monkeypatch` of the repository (Beanie docs can't be built without a DB).
+     Must pass under `uv run pytest -m "not integration"` (no Docker).
+   - **Integration** (`tests/integration/test_<module>.py`, testcontainers):
+     success + the main failure via the `api` fixture; assert the audit entry when
+     the action is auditable.
+   - Tag every test with `@pytest.mark.req("<ID>")`.
 8. **Gates**: `uv run ruff check . && uv run ruff format . && uv run mypy app && uv run pytest -q`.
 
 ## Checklist
 - [ ] Path/role match the contract  - [ ] RBAC + ownership enforced
-- [ ] Audit recorded  - [ ] Standard error shape  - [ ] Traceable test green
+- [ ] Audit recorded  - [ ] Standard error shape
+- [ ] **Unit tests** (pure logic + authz, no Docker) **and** **integration test** green
+- [ ] Tests tagged with the backlog ID
 
 ## Related skills
 `scaffold-module`, `add-model`, `implement-story`.
