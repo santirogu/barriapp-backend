@@ -132,9 +132,10 @@ async def test_assign_and_full_delivery_flow(api: AsyncClient, register_user: Re
             )
             assert proof.status_code == 200
 
-    # order reflects delivered
+    # order reflects delivered and exposes the delivery id (for client tracking)
     order = await api.get(f"/api/v1/orders/{order_id}", headers=seller_h)
     assert order.json()["status"] == "delivered"
+    assert order.json()["delivery_id"] == delivery_id
 
     # collaborator sees the job
     jobs = await api.get("/api/v1/collaborator/jobs", headers=collab_h)

@@ -4,6 +4,8 @@ from beanie import PydanticObjectId
 from fastapi import APIRouter, Query, status
 
 from app.core.deps import CurrentUser
+from app.delivery import repository as delivery_repo
+from app.delivery.models import RefType
 from app.orders import service
 from app.orders.schemas import (
     OrderCancel,
@@ -32,7 +34,11 @@ async def list_my_orders(
 
 @router.get("/{order_id}", response_model=OrderPublic)
 async def get_order(order_id: PydanticObjectId, user: CurrentUser) -> OrderPublic:
-    return OrderPublic.from_order(await service.get_order(user, order_id))
+    order = await service.get_order(user, order_id)
+    # Expose the delivery id (once assigned) so the client can open the tracking WS.
+    delivery = await delivery_repo.get_by_ref(RefType.ORDER, order_id)
+    delivery_id = str(delivery.id) if delivery else None
+    return OrderPublic.from_order(order, delivery_id=delivery_id)
 
 
 @router.post("/{order_id}/accept", response_model=OrderPublic)
