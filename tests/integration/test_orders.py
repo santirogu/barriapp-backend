@@ -132,3 +132,34 @@ async def test_stranger_cannot_read_order(api: AsyncClient, register_user: Regis
     resp = await api.get(f"/api/v1/orders/{order_id}", headers=stranger_h)
     assert resp.status_code == 403
     assert resp.json()["error"]["code"] == "forbidden"
+
+
+@pytest.mark.req("O-2")
+async def test_seller_lists_store_orders(api: AsyncClient, register_user: RegisterUser) -> None:
+    seller_h, store_id, product_id = await _seller_with_product(
+        api, register_user, "+573010000008", price=1000, stock=5
+    )
+    client_h = _auth(await register_user("+573010000009"))
+    order_id = (
+        await api.post(
+            "/api/v1/orders", json=_order_payload(store_id, product_id, 1), headers=client_h
+        )
+    ).json()["id"]
+
+    # owner sees the order in the store queue
+    queue = await api.get(f"/api/v1/stores/{store_id}/orders", headers=seller_h)
+    assert queue.status_code == 200
+    assert order_id in [o["id"] for o in queue.json()]
+
+    # status filter works
+    pending = await api.get(f"/api/v1/stores/{store_id}/orders?status=pending", headers=seller_h)
+    assert order_id in [o["id"] for o in pending.json()]
+    delivered = await api.get(
+        f"/api/v1/stores/{store_id}/orders?status=delivered", headers=seller_h
+    )
+    assert order_id not in [o["id"] for o in delivered.json()]
+
+    # a non-owner cannot read the store's orders
+    stranger_h = _auth(await register_user("+573010000012"))
+    forbidden = await api.get(f"/api/v1/stores/{store_id}/orders", headers=stranger_h)
+    assert forbidden.status_code == 403
