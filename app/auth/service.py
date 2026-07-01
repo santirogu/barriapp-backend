@@ -12,8 +12,15 @@ from jose import JWTError
 
 from app.audit import service as audit
 from app.audit.models import AuditModule, AuditResult, AuditSeverity
-from app.auth import otp, sms
-from app.auth.schemas import LoginRequest, RegisterRequest, TokenResponse, VerifyOtpRequest
+from app.auth import otp, sms, social
+from app.auth.schemas import (
+    LoginRequest,
+    RegisterRequest,
+    SocialLoginRequest,
+    TokenResponse,
+    VerifyOtpRequest,
+)
+from app.auth.social import SocialIdentity, SocialProvider
 from app.core.errors import AppError
 from app.core.security import (
     REFRESH_TOKEN_TYPE,
@@ -63,8 +70,8 @@ async def register(data: RegisterRequest) -> None:
     )
     await users_repo.insert(user)
 
-    code = await otp.issue_otp(user.phone)
-    await sms.send_otp(user.phone, code)
+    code = await otp.issue_otp(data.phone)
+    await sms.send_otp(data.phone, code)
 
     await audit.record(
         module=AuditModule.AUTH,
@@ -112,7 +119,11 @@ async def verify_otp(data: VerifyOtpRequest) -> TokenResponse:
 
 async def login(data: LoginRequest) -> TokenResponse:
     user = await users_repo.get_by_phone(data.phone)
-    if user is None or not verify_password(data.password, user.password_hash):
+    if (
+        user is None
+        or user.password_hash is None
+        or not verify_password(data.password, user.password_hash)
+    ):
         await audit.record(
             module=AuditModule.AUTH,
             action="auth.login.failed",
@@ -180,5 +191,71 @@ async def refresh(refresh_token: str) -> TokenResponse:
         actor_role=primary_role(user),
         target_type="user",
         target_id=user.id,
+    )
+    return _tokens(user)
+
+
+def _apply_provider(user: User, identity: SocialIdentity) -> None:
+    if identity.provider == SocialProvider.GOOGLE:
+        user.google_sub = identity.subject
+    else:
+        user.apple_sub = identity.subject
+
+
+async def _find_by_provider(identity: SocialIdentity) -> User | None:
+    if identity.provider == SocialProvider.GOOGLE:
+        return await users_repo.get_by_google_sub(identity.subject)
+    return await users_repo.get_by_apple_sub(identity.subject)
+
+
+async def social_login(data: SocialLoginRequest) -> TokenResponse:
+    """Verify a Google/Apple ID token and log in (creating/linking the account)."""
+    identity = await social.verify_token(data.provider, data.id_token)
+
+    user = await _find_by_provider(identity)
+    linked = False
+    if user is None and identity.email is not None:
+        # Link the provider to an existing account with the same email.
+        user = await users_repo.get_by_email(identity.email)
+        if user is not None:
+            _apply_provider(user, identity)
+            user.updated_at = datetime.now(UTC)
+            await user.save()
+            linked = True
+
+    if user is None:
+        user = User(
+            full_name=identity.full_name or "Usuario BarriApp",
+            email=identity.email,
+            status=UserStatus.ACTIVE,  # email verified by the provider
+            consent=Consent(
+                habeas_data=True, version=CONSENT_VERSION, accepted_at=datetime.now(UTC)
+            ),
+        )
+        _apply_provider(user, identity)
+        await users_repo.insert(user)
+        await audit.record(
+            module=AuditModule.AUTH,
+            action="auth.social.register",
+            actor_id=user.id,
+            actor_role=primary_role(user),
+            target_type="user",
+            target_id=user.id,
+            changes={"provider": data.provider.value},
+        )
+
+    if user.status == UserStatus.SUSPENDED:
+        raise AppError(
+            "Account suspended", code="account_suspended", status_code=status.HTTP_403_FORBIDDEN
+        )
+
+    await audit.record(
+        module=AuditModule.AUTH,
+        action="auth.social.login",
+        actor_id=user.id,
+        actor_role=primary_role(user),
+        target_type="user",
+        target_id=user.id,
+        changes={"provider": data.provider.value, "linked_existing": linked},
     )
     return _tokens(user)

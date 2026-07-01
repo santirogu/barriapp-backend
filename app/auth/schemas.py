@@ -2,6 +2,8 @@
 
 from pydantic import BaseModel, EmailStr, Field
 
+from app.auth.social import SocialProvider
+
 
 class RegisterRequest(BaseModel):
     phone: str = Field(min_length=7, max_length=20)
@@ -23,6 +25,11 @@ class VerifyOtpRequest(BaseModel):
 class LoginRequest(BaseModel):
     phone: str
     password: str
+
+
+class SocialLoginRequest(BaseModel):
+    provider: SocialProvider
+    id_token: str = Field(min_length=1)
 
 
 class RefreshRequest(BaseModel):

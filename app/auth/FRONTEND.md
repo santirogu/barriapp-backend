@@ -48,6 +48,18 @@ Request: `{ "phone": "+573001112233", "password": "..." }`
 Response `200`: `TokenResponse`.
 Errors: `401 invalid_credentials`, `403 not_verified` (verify OTP first), `403 account_suspended`.
 
+### POST `/api/v1/auth/social`  (public) — Google / Apple sign-in
+The client runs the native Google/Apple sign-in and sends us the resulting **ID
+token**; we verify it and log in (creating the account on first use, or linking to
+an existing account with the same email). No OTP — social accounts are active
+immediately.
+Request: `{ "provider": "google" | "apple", "id_token": "<provider-id-token>" }`
+Response `200`: `TokenResponse` (same shape as login).
+Errors: `401 invalid_social_token`, `403 account_suspended`,
+`501 provider_not_configured` (provider not enabled on the server).
+> Mobile: use the Google/Apple native SDK to obtain the ID token. Web: Google
+> Identity Services / Sign in with Apple JS. Social accounts may have no phone.
+
 ### POST `/api/v1/auth/refresh`  (public)
 Request: `{ "refresh_token": "<jwt>" }`
 Response `200`: `TokenResponse`.

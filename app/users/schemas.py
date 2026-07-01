@@ -7,7 +7,7 @@ from app.users.models import Role, User, UserStatus
 
 class UserPublic(BaseModel):
     id: str
-    phone: str
+    phone: str | None
     email: EmailStr | None
     full_name: str
     roles: list[Role]
