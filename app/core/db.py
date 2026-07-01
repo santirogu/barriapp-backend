@@ -26,6 +26,7 @@ def _document_models() -> list[type[Document]]:
     Imported lazily (inside the function) to avoid import cycles and to keep the
     registry in one place as new modules add documents.
     """
+    from app.admin.models import PlatformConfig
     from app.audit.models import AuditLog
     from app.catalog.models import Category, Product
     from app.collaborators.models import CollaboratorProfile
@@ -52,6 +53,7 @@ def _document_models() -> list[type[Document]]:
         Errand,
         Review,
         Notification,
+        PlatformConfig,
     ]
 
 
