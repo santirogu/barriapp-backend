@@ -76,17 +76,14 @@ _APPLE_ISSUER = "https://appleid.apple.com"
 
 
 async def _verify_apple(id_token: str, client_id: str) -> SocialIdentity:
-    def _run() -> dict[str, object]:
-        # Lazy imports; verify against Apple's JWKS.
-        import json
-        from urllib.request import urlopen
+    import httpx
+    from jose import jwt
 
-        from jose import jwt
-
-        # URL is a fixed https constant (not user-controlled), so the dynamic-urllib
-        # concern doesn't apply here.
-        with urlopen(_APPLE_JWKS_URL, timeout=5) as resp:  # nosec B310  # nosemgrep
-            jwks = json.loads(resp.read())
+    try:
+        async with httpx.AsyncClient(timeout=5) as client:
+            resp = await client.get(_APPLE_JWKS_URL)
+            resp.raise_for_status()
+            jwks = resp.json()
         headers = jwt.get_unverified_header(id_token)
         key = next(k for k in jwks["keys"] if k["kid"] == headers["kid"])
         claims: dict[str, object] = jwt.decode(
@@ -96,11 +93,7 @@ async def _verify_apple(id_token: str, client_id: str) -> SocialIdentity:
             audience=client_id,
             issuer=_APPLE_ISSUER,
         )
-        return claims
-
-    try:
-        claims = await anyio.to_thread.run_sync(_run)
-    except Exception as exc:
+    except Exception as exc:  # invalid signature/aud/exp, network, etc.
         raise _invalid_token() from exc
     return SocialIdentity(
         provider=SocialProvider.APPLE,
