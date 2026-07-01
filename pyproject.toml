@@ -27,6 +27,8 @@ dev = [
     "mypy>=1.13",
     "pre-commit>=4.0",
     "testcontainers[mongodb,redis]>=4.8",
+    "httpx-ws>=0.6",
+    "pytest-timeout>=2.3",
 ]
 
 [build-system]
@@ -68,6 +70,7 @@ ignore_missing_imports = true
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+timeout = 60
 markers = [
     "req: link a test to one or more backlog story IDs (traceability), e.g. req('O-1')",
     "integration: tests that require Docker (testcontainers: MongoDB, Redis)",

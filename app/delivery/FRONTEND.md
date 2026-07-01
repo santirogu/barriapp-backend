@@ -57,12 +57,19 @@ Returns `DeliveryPublic`. Errors: `403 forbidden`, `404 not_found`.
 Query `page`/`limit`. Returns the caller's `DeliveryPublic[]`, newest first.
 
 ## Notes for the client
-- **Client tracking:** poll `GET /deliveries/{id}` today; a **WebSocket**
-  (`/ws/deliveries/{id}`) is planned next and will stream the Redis updates that
-  `location`/`status` already publish.
 - Coordinates are GeoJSON `[lng, lat]`.
 
+## Live tracking (WebSocket)
+`WS /api/v1/ws/deliveries/{id}?token=<accessToken>` — for the client, assigned
+collaborator, store owner, or admin. On connect the server sends a **snapshot**
+`{ delivery_id, status, route }`, then streams live updates (same shape) as the
+collaborator posts status/location. Auth is via the `token` query param (browsers
+can't set WS headers); invalid token closes with `4401`, unauthorized with `4403`.
+```js
+const ws = new WebSocket(`wss://<host>/api/v1/ws/deliveries/${id}?token=${accessToken}`);
+ws.onmessage = (e) => render(JSON.parse(e.data));
+```
+Fallback: poll `GET /deliveries/{id}` if the socket drops.
+
 ## Not yet implemented (planned)
-Live-tracking **WebSocket** (`/ws/deliveries/{id}`) — D-4; errand deliveries
-(`ref_type: errand`) once the errands module lands; Wompi settlement on delivery
-(payments module).
+Errand deliveries (`ref_type: errand`) once wired; ETA in tracking payloads.
