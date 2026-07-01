@@ -101,6 +101,56 @@ async def settle_order_payment(order: Order) -> Payment | None:
     return payment
 
 
+async def settle_errand_payment(
+    *,
+    errand_id: PydanticObjectId,
+    client_id: PydanticObjectId,
+    collaborator_id: PydanticObjectId | None,
+    offered_fee: int,
+) -> Payment | None:
+    """Record a cash errand payment (approved) and credit the collaborator's fee.
+
+    Errands take no platform commission at launch. Idempotent per errand.
+    """
+    if await payments_repo.get_payment_by_ref(PaymentRefType.ERRAND, errand_id) is not None:
+        return None
+
+    payment = Payment(
+        ref_type=PaymentRefType.ERRAND,
+        ref_id=errand_id,
+        payer_id=client_id,
+        amount=offered_fee,
+        method=PaymentMethod.CASH,
+        status=PaymentStatus.APPROVED,
+    )
+    await payments_repo.insert_payment(payment)
+
+    lines: list[LedgerLine] = []
+    if collaborator_id is not None and offered_fee > 0:
+        from app.payments.models import LedgerType
+
+        lines.append(
+            LedgerLine(
+                type=LedgerType.EARNING,
+                user_id=str(collaborator_id),
+                amount=offered_fee,
+                settled=True,
+            )
+        )
+    if lines:
+        await _write_ledger(lines, PaymentRefType.ERRAND, errand_id)
+
+    await audit.record(
+        module=AuditModule.PAYMENTS,
+        action="payment.approved",
+        actor_id=client_id,
+        target_type="errand",
+        target_id=errand_id,
+        changes={"method": "cash", "amount": offered_fee},
+    )
+    return payment
+
+
 async def create_intent(user: User, order_id: PydanticObjectId) -> IntentResponse:
     order = await orders_repo.get_by_id(order_id)
     if order is None:
