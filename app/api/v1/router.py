@@ -1,13 +1,15 @@
 """Aggregates all v1 routers.
 
-As domain modules are implemented, include their routers here, e.g.:
-    from app.auth.router import router as auth_router
-    api_router.include_router(auth_router, prefix="/auth")
+As domain modules are implemented, include their routers here.
 """
 
 from fastapi import APIRouter
 
 from app.api.v1 import health
+from app.auth.router import router as auth_router
+from app.users.router import router as users_router
 
 api_router = APIRouter()
 api_router.include_router(health.router)
+api_router.include_router(auth_router, prefix="/auth")
+api_router.include_router(users_router)

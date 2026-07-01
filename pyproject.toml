@@ -12,7 +12,8 @@ dependencies = [
     "beanie>=2.1",
     "redis>=5.2",
     "python-jose[cryptography]>=3.3",
-    "passlib[bcrypt]>=1.7",
+    "pwdlib[argon2]>=0.2",
+    "email-validator>=2.2",
     "structlog>=24.4",
     "sentry-sdk[fastapi]>=2.18",
 ]
@@ -25,6 +26,7 @@ dev = [
     "ruff>=0.7",
     "mypy>=1.13",
     "pre-commit>=4.0",
+    "testcontainers[mongodb,redis]>=4.8",
 ]
 
 [build-system]
@@ -56,4 +58,5 @@ asyncio_mode = "auto"
 testpaths = ["tests"]
 markers = [
     "req: link a test to one or more backlog story IDs (traceability), e.g. req('O-1')",
+    "integration: tests that require Docker (testcontainers: MongoDB, Redis)",
 ]

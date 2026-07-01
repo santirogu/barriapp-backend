@@ -34,6 +34,8 @@ class RequestContextMiddleware:
             request_id=request_id,
             method=request.method,
             path=request.url.path,
+            client_ip=request.client.host if request.client else None,
+            user_agent=request.headers.get("user-agent"),
         )
 
         async def send_with_header(message):  # type: ignore[no-untyped-def]
