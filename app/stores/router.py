@@ -71,6 +71,12 @@ async def list_stores(
     return [StorePublic.from_store(s) for s in stores]
 
 
+@router.get("/stores/mine", response_model=list[StorePublic])
+async def list_my_stores(user: CurrentUser) -> list[StorePublic]:
+    # Declared before /stores/{store_id} so "mine" is not parsed as a store id.
+    return [StorePublic.from_store(s) for s in await service.list_my_stores(user)]
+
+
 @router.get("/stores/{store_id}", response_model=StorePublic)
 async def get_store(store_id: PydanticObjectId) -> StorePublic:
     return StorePublic.from_store(await service.get_store(store_id))
