@@ -10,6 +10,7 @@ from app.auth.router import router as auth_router
 from app.catalog.router import router as catalog_router
 from app.collaborators.router import router as collaborators_router
 from app.delivery.router import router as delivery_router
+from app.errands.router import router as errands_router
 from app.orders.router import router as orders_router
 from app.payments.router import router as payments_router
 from app.stores.router import router as stores_router
@@ -25,3 +26,4 @@ api_router.include_router(orders_router)
 api_router.include_router(collaborators_router)
 api_router.include_router(delivery_router)
 api_router.include_router(payments_router)
+api_router.include_router(errands_router)
