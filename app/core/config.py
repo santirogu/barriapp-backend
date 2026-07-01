@@ -55,6 +55,10 @@ class Settings(BaseSettings):
     # Redis
     redis_url: str = "redis://localhost:6379/0"
 
+    # Social login (verify provider ID tokens). Unset → that provider is disabled.
+    google_client_id: str | None = None
+    apple_client_id: str | None = None
+
     # Auth / JWT
     jwt_secret_key: str = "change-me-in-a-real-environment"
     jwt_algorithm: str = "HS256"

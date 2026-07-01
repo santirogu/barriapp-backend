@@ -17,5 +17,13 @@ async def get_by_email(email: str) -> User | None:
     return await User.find_one(User.email == email)
 
 
+async def get_by_google_sub(subject: str) -> User | None:
+    return await User.find_one(User.google_sub == subject)
+
+
+async def get_by_apple_sub(subject: str) -> User | None:
+    return await User.find_one(User.apple_sub == subject)
+
+
 async def insert(user: User) -> User:
     return await user.insert()

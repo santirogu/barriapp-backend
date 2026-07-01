@@ -8,6 +8,7 @@ from app.auth.schemas import (
     MessageResponse,
     RefreshRequest,
     RegisterRequest,
+    SocialLoginRequest,
     TokenResponse,
     VerifyOtpRequest,
 )
@@ -30,6 +31,11 @@ async def verify_otp(data: VerifyOtpRequest) -> TokenResponse:
 @router.post("/login", response_model=TokenResponse, dependencies=[Depends(rate_limiter("login"))])
 async def login(data: LoginRequest) -> TokenResponse:
     return await service.login(data)
+
+
+@router.post("/social", response_model=TokenResponse, dependencies=[Depends(rate_limiter("login"))])
+async def social_login(data: SocialLoginRequest) -> TokenResponse:
+    return await service.social_login(data)
 
 
 @router.post("/refresh", response_model=TokenResponse)

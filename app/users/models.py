@@ -55,29 +55,40 @@ def _utcnow() -> datetime:
 
 
 class User(Document):
-    phone: str
+    # phone/password are optional: social-login accounts have neither.
+    phone: str | None = None
     email: EmailStr | None = None
-    password_hash: str
+    password_hash: str | None = None
     full_name: str
     roles: list[Role] = Field(default_factory=lambda: [Role.CLIENT])
     status: UserStatus = UserStatus.PENDING_VERIFICATION
     avatar_url: str | None = None
     addresses: list[Address] = Field(default_factory=list)
     device_tokens: list[str] = Field(default_factory=list)
+    google_sub: str | None = None  # Google account subject (social login)
+    apple_sub: str | None = None  # Apple account subject (social login)
     consent: Consent
     created_at: datetime = Field(default_factory=_utcnow)
     updated_at: datetime = Field(default_factory=_utcnow)
 
     class Settings:
         name = "users"
+        # Partial (not sparse) unique indexes: uniqueness only among real string
+        # values, so the many accounts lacking a field (null) don't collide.
         indexes = [  # noqa: RUF012
-            IndexModel("phone", unique=True),
-            # Partial (not sparse): unique only among real emails; many users may
-            # have no email (stored as null), which a sparse index would not skip.
             IndexModel(
-                "email",
+                "phone", unique=True, partialFilterExpression={"phone": {"$type": "string"}}
+            ),
+            IndexModel(
+                "email", unique=True, partialFilterExpression={"email": {"$type": "string"}}
+            ),
+            IndexModel(
+                "google_sub",
                 unique=True,
-                partialFilterExpression={"email": {"$type": "string"}},
+                partialFilterExpression={"google_sub": {"$type": "string"}},
+            ),
+            IndexModel(
+                "apple_sub", unique=True, partialFilterExpression={"apple_sub": {"$type": "string"}}
             ),
             IndexModel("roles"),
         ]
