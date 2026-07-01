@@ -6,6 +6,9 @@ from fastapi import APIRouter, Query, status
 
 from app.core.deps import CurrentUser
 from app.core.errors import AppError
+from app.orders import service as orders_service
+from app.orders.models import OrderStatus
+from app.orders.schemas import OrderPublic
 from app.stores import service
 from app.stores.schemas import StoreCreate, StorePublic, StoreStatusUpdate, StoreUpdate
 
@@ -80,6 +83,20 @@ async def list_my_stores(user: CurrentUser) -> list[StorePublic]:
 @router.get("/stores/{store_id}", response_model=StorePublic)
 async def get_store(store_id: PydanticObjectId) -> StorePublic:
     return StorePublic.from_store(await service.get_store(store_id))
+
+
+@router.get("/stores/{store_id}/orders", response_model=list[OrderPublic])
+async def list_store_orders(
+    store_id: PydanticObjectId,
+    user: CurrentUser,
+    order_status: OrderStatus | None = Query(None, alias="status"),
+    page: int = Query(1, ge=1),
+    limit: int = Query(20, ge=1, le=100),
+) -> list[OrderPublic]:
+    orders = await orders_service.list_store_orders(
+        user, store_id, order_status=order_status, skip=(page - 1) * limit, limit=limit
+    )
+    return [OrderPublic.from_order(o) for o in orders]
 
 
 @router.patch("/stores/{store_id}", response_model=StorePublic)

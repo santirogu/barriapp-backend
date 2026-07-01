@@ -162,6 +162,25 @@ async def list_my_orders(user: User, *, skip: int, limit: int) -> list[Order]:
     return await orders_repo.list_by_client(user.id, skip=skip, limit=limit)
 
 
+async def list_store_orders(
+    user: User,
+    store_id: PydanticObjectId,
+    *,
+    order_status: OrderStatus | None,
+    skip: int,
+    limit: int,
+) -> list[Order]:
+    """Orders for a store the caller owns (seller order queue)."""
+    store = await _load_store(store_id)
+    if store.owner_id != user.id and not _is_admin(user):
+        raise AppError(
+            "Not the store owner", code="forbidden", status_code=status.HTTP_403_FORBIDDEN
+        )
+    return await orders_repo.list_by_store(
+        store_id, order_status=order_status, skip=skip, limit=limit
+    )
+
+
 async def _assert_store_owner(user: User, order: Order) -> Store:
     store = await _load_store(order.store_id)
     if store.owner_id != user.id and not _is_admin(user):
