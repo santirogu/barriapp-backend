@@ -1,6 +1,7 @@
 """Stores endpoints. See docs/API_CONTRACT.md §3."""
 
 from beanie import PydanticObjectId
+from bson.errors import InvalidId
 from fastapi import APIRouter, Query, status
 
 from app.core.deps import CurrentUser
@@ -37,7 +38,7 @@ def _parse_object_id(value: str | None, field: str) -> PydanticObjectId | None:
         return None
     try:
         return PydanticObjectId(value)
-    except (ValueError, TypeError) as exc:
+    except (InvalidId, ValueError, TypeError) as exc:
         raise AppError(
             f"Invalid {field}",
             code="invalid_query",

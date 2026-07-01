@@ -24,6 +24,13 @@ def _is_admin(user: User) -> bool:
     return Role.SUPER_ADMIN in user.roles
 
 
+def audit_action_for(changed_fields: set[str]) -> str:
+    """Pick the audit action for a product update (pure; unit-tested)."""
+    if changed_fields == {"is_available"}:
+        return "product.availability.changed"
+    return "product.updated"
+
+
 async def _assert_store_owner(user: User, store_id: PydanticObjectId) -> None:
     store = await stores_repo.get_by_id(store_id)
     if store is None:
@@ -114,12 +121,9 @@ async def update_product(user: User, product_id: PydanticObjectId, data: Product
     if fields:
         product.updated_at = _utcnow()
         await product.save()
-        action = (
-            "product.availability.changed" if set(fields) == {"is_available"} else "product.updated"
-        )
         await audit.record(
             module=AuditModule.CATALOG,
-            action=action,
+            action=audit_action_for(set(fields)),
             actor_id=user.id,
             actor_role=primary_role(user),
             target_type="product",
