@@ -29,6 +29,8 @@ dev = [
     "testcontainers[mongodb,redis]>=4.8",
     "httpx-ws>=0.6",
     "pytest-timeout>=2.3",
+    "bandit>=1.8",
+    "pip-audit>=2.7",
 ]
 
 [build-system]
@@ -45,6 +47,11 @@ src = ["app", "tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "C4", "SIM", "ASYNC"]
+
+[tool.bandit]
+exclude_dirs = ["tests", ".venv"]
+# B101: asserts are used for type-narrowing (never for security checks).
+skips = ["B101"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["app", "tests"]
