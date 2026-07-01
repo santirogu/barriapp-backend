@@ -10,10 +10,17 @@ status. Admins curate the knowledge base; any authenticated user chats. Answers
 are in Spanish.
 
 **How it works:** the question is embedded, the most relevant knowledge chunks are
-retrieved, and an LLM composes a grounded answer. With `ANTHROPIC_API_KEY` set the
-LLM is **Claude**; otherwise a deterministic fallback composes the answer from the
-top source (so the feature works offline/in dev). Retrieval is in-app cosine today;
-Atlas Vector Search (`$vectorSearch`) is the production path.
+retrieved, and an **agent** answers — it may **call backend tools** for live data
+(`get_order_status`, `search_stores`) before responding. With `ANTHROPIC_API_KEY`
+set the agent is **Claude** running its tool-use loop; otherwise a deterministic
+planner picks at most one tool and a fallback composes the answer (so it works
+offline/in dev). Tools are bound to the caller (ownership-safe). Retrieval is in-app
+cosine today; Atlas Vector Search (`$vectorSearch`) is the production path.
+
+**Tools the assistant can call:**
+- `get_order_status` — the caller's order status (a given `order_id` or their latest).
+- `search_stores` — find stores by name.
+The response lists which tools ran in `tools_used`.
 
 ## Endpoints
 
@@ -35,10 +42,13 @@ Ask the assistant. Request:
   context (e.g. "¿dónde está mi pedido?").
 Response `200`:
 ```json
-{ "answer": "Según la información de BarriApp: Puedes pagar en efectivo o con Wompi...",
+{ "answer": "El pedido BA-1A2B3C4D está en estado pending.",
   "conversation_id": "665f...",
-  "sources": [{ "id": "665e...", "source_type": "faq", "snippet": "Puedes pagar..." }] }
+  "sources": [{ "id": "665e...", "source_type": "faq", "snippet": "Puedes pagar..." }],
+  "tools_used": ["get_order_status"] }
 ```
+`tools_used` lists any backend tools the assistant invoked (e.g. it can answer
+"¿dónde está mi pedido?" without you passing `order_id`).
 
 ### GET `/api/v1/ai/conversations/{id}`  (auth — owner)
 Full conversation history: `{ id, messages: [{role, content, at}], created_at }`.
@@ -51,6 +61,5 @@ Errors: `403 forbidden`, `404 not_found`.
   with the real status.
 
 ## Not yet implemented (planned)
-Real LLM tool-calling loop (the assistant autonomously querying the API), Atlas
-Vector Search retrieval at scale, streaming responses, automatic knowledge
-ingestion from stores/products, and multi-turn context windowing.
+Atlas Vector Search retrieval at scale, streaming responses, more tools, automatic
+knowledge ingestion from stores/products, and multi-turn context windowing.

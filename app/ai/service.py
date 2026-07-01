@@ -5,13 +5,13 @@ from fastapi import status
 
 from app.ai import embeddings, llm, retrieval
 from app.ai import repository as ai_repo
+from app.ai import tools as ai_tools
 from app.ai.models import AiConversation, AiKnowledge, ConversationMessage
 from app.ai.schemas import ChatRequest, ChatResponse, KnowledgeIngest, SourceRef
 from app.audit import service as audit
 from app.audit.models import AuditModule
 from app.core.config import get_settings
 from app.core.errors import AppError
-from app.orders import repository as orders_repo
 from app.users.models import User
 from app.users.service import primary_role
 
@@ -37,15 +37,6 @@ async def ingest_knowledge(admin: User, data: KnowledgeIngest) -> AiKnowledge:
     return knowledge
 
 
-async def _order_context(user: User, order_id: str | None) -> str | None:
-    if not order_id:
-        return None
-    order = await orders_repo.get_by_id(PydanticObjectId(order_id))
-    if order is None or order.client_id != user.id:
-        return None
-    return f"El pedido {order.code} está en estado {order.status.value}."
-
-
 async def chat(user: User, data: ChatRequest) -> ChatResponse:
     settings = get_settings()
     query_embedding = embeddings.embed(data.message)
@@ -69,11 +60,12 @@ async def chat(user: User, data: ChatRequest) -> ChatResponse:
     ]
     contexts = [content for _kid, _score, content in ranked]
 
-    order_ctx = await _order_context(user, data.order_id)
-    if order_ctx is not None:
-        contexts.insert(0, order_ctx)
-
-    answer_text = await llm.answer(data.message, contexts)
+    # Agentic step: the assistant may call tools (order status, store search) for
+    # live data before answering.
+    agent_tools = ai_tools.build_tools()
+    tool_ctx = ai_tools.ToolContext(user=user, order_id_hint=data.order_id)
+    result = await llm.run_agent(data.message, contexts, agent_tools, tool_ctx)
+    answer_text = result.answer
 
     # persist the conversation (new or continued)
     conversation = None
@@ -89,7 +81,12 @@ async def chat(user: User, data: ChatRequest) -> ChatResponse:
     conversation.messages.append(ConversationMessage(role="assistant", content=answer_text))
     await conversation.save()
 
-    return ChatResponse(answer=answer_text, conversation_id=str(conversation.id), sources=sources)
+    return ChatResponse(
+        answer=answer_text,
+        conversation_id=str(conversation.id),
+        sources=sources,
+        tools_used=result.tools_used,
+    )
 
 
 async def get_conversation(user: User, conversation_id: PydanticObjectId) -> AiConversation:
