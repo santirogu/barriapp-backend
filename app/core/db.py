@@ -33,6 +33,7 @@ def _document_models() -> list[type[Document]]:
     from app.errands.models import Errand
     from app.orders.models import Order
     from app.payments.models import LedgerEntry, Payment
+    from app.reviews.models import Review
     from app.stores.models import Store
     from app.users.models import User
 
@@ -48,6 +49,7 @@ def _document_models() -> list[type[Document]]:
         Payment,
         LedgerEntry,
         Errand,
+        Review,
     ]
 
 
