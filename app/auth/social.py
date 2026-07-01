@@ -70,15 +70,22 @@ async def _verify_google(id_token: str, client_id: str) -> SocialIdentity:
     )
 
 
+# Fixed, trusted Apple endpoints (constants — never user-controlled).
+_APPLE_JWKS_URL = "https://appleid.apple.com/auth/keys"
+_APPLE_ISSUER = "https://appleid.apple.com"
+
+
 async def _verify_apple(id_token: str, client_id: str) -> SocialIdentity:
     def _run() -> dict[str, object]:
-        # Lazy imports; verify against Apple's JWKS (iss https://appleid.apple.com).
+        # Lazy imports; verify against Apple's JWKS.
         import json
         from urllib.request import urlopen
 
         from jose import jwt
 
-        with urlopen("https://appleid.apple.com/auth/keys", timeout=5) as resp:  # nosec B310
+        # URL is a fixed https constant (not user-controlled), so the dynamic-urllib
+        # concern doesn't apply here.
+        with urlopen(_APPLE_JWKS_URL, timeout=5) as resp:  # nosec B310  # nosemgrep
             jwks = json.loads(resp.read())
         headers = jwt.get_unverified_header(id_token)
         key = next(k for k in jwks["keys"] if k["kid"] == headers["kid"])
@@ -87,7 +94,7 @@ async def _verify_apple(id_token: str, client_id: str) -> SocialIdentity:
             key,
             algorithms=["RS256"],
             audience=client_id,
-            issuer="https://appleid.apple.com",
+            issuer=_APPLE_ISSUER,
         )
         return claims
 
