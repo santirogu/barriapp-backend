@@ -63,6 +63,8 @@ class Settings(BaseSettings):
 
     # Commerce
     default_commission_rate: float = 0.10  # platform commission when a store has no override
+    premium_commission_rate: float = 0.05  # reduced rate for Premium-subscribed stores
+    subscription_price: int = 30000  # COP / month for the seller Premium plan
 
     # Payments (Wompi)
     wompi_public_key: str = "pub_test_change_me"
