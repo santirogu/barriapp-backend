@@ -3,10 +3,9 @@
 Uses PyMongo's native async client (``AsyncMongoClient``); Motor is deprecated in
 favor of it and Beanie 2.x targets it directly.
 
-Domain modules register their Beanie documents by appending to
-``DOCUMENT_MODELS`` (typically at import time), and ``init_db`` wires them into
-Beanie on application startup. The connection lifecycle is driven by the app
-lifespan in ``app.main``.
+Domain modules register their Beanie documents in ``_document_models``, and
+``init_db`` wires them into Beanie on application startup. The connection
+lifecycle is driven by the app lifespan in ``app.main``.
 """
 
 from typing import Any
@@ -20,8 +19,17 @@ from app.core.config import Settings
 MongoClientT = AsyncMongoClient[dict[str, Any]]
 MongoDatabaseT = AsyncDatabase[dict[str, Any]]
 
-# Populated by each domain module as its documents are implemented.
-DOCUMENT_MODELS: list[type[Document]] = []
+
+def _document_models() -> list[type[Document]]:
+    """Collect all Beanie document models to register with Beanie.
+
+    Imported lazily (inside the function) to avoid import cycles and to keep the
+    registry in one place as new modules add documents.
+    """
+    from app.audit.models import AuditLog
+    from app.users.models import User
+
+    return [AuditLog, User]
 
 
 class _DatabaseState:
@@ -36,7 +44,7 @@ async def init_db(settings: Settings) -> None:
     """Open the Mongo connection and initialize Beanie with registered models."""
     client: MongoClientT = AsyncMongoClient(settings.mongodb_uri)
     database = client[settings.mongodb_db_name]
-    await init_beanie(database=database, document_models=DOCUMENT_MODELS)
+    await init_beanie(database=database, document_models=_document_models())
     _state.client = client
     _state.database = database
 
