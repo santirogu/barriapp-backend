@@ -4,9 +4,10 @@ Delivery platform for **small neighborhood stores ("tiendas de barrio")** in
 **Colombia**, plus a peer-to-peer **errand network ("mandados")**. Mobile-first
 (React Native + Expo) with web access; Python/FastAPI + MongoDB backend.
 
-> **Status: DESIGN / PLANNING phase.** No implementation code yet — these
-> documents are the design source of truth. See [../CLAUDE.md](../CLAUDE.md) for
-> the quick project overview and locked decisions.
+> **Status: IMPLEMENTED — MVP + phase-2 AI.** All MVP modules and the AI
+> assistant are built and tested; these documents are the design source of truth
+> and are kept in sync with the code. See [../CLAUDE.md](../CLAUDE.md) for the
+> quick project overview and locked decisions.
 
 ## Suggested reading order
 
