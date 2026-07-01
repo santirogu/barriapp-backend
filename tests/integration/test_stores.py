@@ -50,6 +50,27 @@ async def test_create_store_grants_seller_and_is_geo_searchable(
 
 
 @pytest.mark.req("S-1")
+async def test_list_my_stores_returns_only_owned(
+    api: AsyncClient, register_user: RegisterUser
+) -> None:
+    owner = _auth(await register_user("+573001000010"))
+    created = await api.post(
+        "/api/v1/stores", json=_store_payload("Mi Tienda", BOGOTA), headers=owner
+    )
+    store_id = created.json()["id"]
+
+    mine = await api.get("/api/v1/stores/mine", headers=owner)
+    assert mine.status_code == 200
+    assert [s["id"] for s in mine.json()] == [store_id]
+
+    # A different user does not see it, and non-sellers get an empty list.
+    other = _auth(await register_user("+573001000011"))
+    other_mine = await api.get("/api/v1/stores/mine", headers=other)
+    assert other_mine.status_code == 200
+    assert store_id not in [s["id"] for s in other_mine.json()]
+
+
+@pytest.mark.req("S-1")
 async def test_non_owner_cannot_update_store(api: AsyncClient, register_user: RegisterUser) -> None:
     owner = await register_user("+573001000002")
     resp = await api.post(

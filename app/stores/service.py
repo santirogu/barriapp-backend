@@ -78,6 +78,12 @@ async def get_store(store_id: PydanticObjectId) -> Store:
     return store
 
 
+async def list_my_stores(user: User) -> list[Store]:
+    """Stores owned by the caller (seller area). Empty if not a seller yet."""
+    assert user.id is not None
+    return await stores_repo.list_by_owner(user.id)
+
+
 async def search_stores(
     *,
     near: tuple[float, float] | None,
