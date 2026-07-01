@@ -86,7 +86,7 @@ async def track_delivery(websocket: WebSocket, delivery_id: str) -> None:
             if message.get("type") == "message":
                 await websocket.send_text(message["data"])
     except WebSocketDisconnect:
-        pass
+        logger.debug("ws_delivery_client_disconnected", delivery_id=delivery_id)
     except Exception:
         logger.exception("ws_delivery_stream_failed", delivery_id=delivery_id)
     finally:
