@@ -18,5 +18,10 @@ RUN uv sync --frozen --no-dev --no-install-project
 COPY app ./app
 ENV PATH="/app/.venv/bin:$PATH"
 
+# Trust the platform's reverse proxy for X-Forwarded-For/Proto (so client IP &
+# scheme are correct behind Cloud Run / ECS / ingress). Restrict to the proxy's
+# IP/range in stricter setups by overriding FORWARDED_ALLOW_IPS at deploy time.
+ENV FORWARDED_ALLOW_IPS=*
+
 EXPOSE 8000
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers"]
