@@ -64,6 +64,11 @@ class Settings(BaseSettings):
     # Commerce
     default_commission_rate: float = 0.10  # platform commission when a store has no override
 
+    # Payments (Wompi)
+    wompi_public_key: str = "pub_test_change_me"
+    wompi_events_secret: str = "change-me-wompi-events-secret"
+    payment_currency: str = "COP"
+
     # Observability
     sentry_dsn: str | None = None
 
