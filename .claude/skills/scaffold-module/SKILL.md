@@ -32,9 +32,13 @@ mirror their structure and conventions.
    `app/core/db.py`.
 4. **Mount the router**: include it in `app/api/v1/router.py` with the correct prefix
    per `docs/API_CONTRACT.md`.
-5. **Tests**: create `tests/integration/test_<module>.py` (happy path via the
-   `api` fixture) and unit tests where logic is pure. Tag each with the backlog id:
-   `@pytest.mark.req("<ID>")`.
+5. **Tests — two levels are REQUIRED** (keep the pyramid; see the shared
+   "Testing" section below):
+   - **Unit** (`tests/test_<module>_*.py`, no DB): pure logic + authorization
+     branches. Extract pure helpers so they don't need a DB.
+   - **Integration** (`tests/integration/test_<module>.py`, testcontainers):
+     the DB-backed happy path + a key failure, via the `api` fixture.
+   - Tag every test with `@pytest.mark.req("<ID>")`.
 6. **Run the gates** and fix everything until green:
    ```bash
    uv run ruff check . && uv run ruff format . && uv run mypy app && uv run pytest -q
@@ -46,6 +50,19 @@ mirror their structure and conventions.
 - Every auditable action → `audit.record(module=AuditModule.<X>, action="<module>.<entity>.<verb>", …)`.
 - Money in COP as integers/Decimal per the model; geo coordinates `[lng, lat]`.
 - Keep the layered split (router → service → repository); no DB queries in routers.
+
+## Testing (two levels — required for every module)
+The pyramid is mandatory: **many fast unit tests + a few integration tests.**
+- **Unit (no DB, must run without Docker):** cover pure logic (parsing, criteria
+  building, calculations) and **authorization branches**. Beanie documents CANNOT
+  be instantiated without `init_beanie` (`CollectionWasNotInitialized`), so:
+  extract pure helpers to plain functions, and for authz tests use duck-typed
+  stand-ins (`types.SimpleNamespace`) plus a mocked repository (`monkeypatch`).
+  Verify: `uv run pytest -m "not integration"` passes with no Docker.
+- **Integration (`@pytest.mark.integration`, testcontainers):** the DB-backed
+  happy path + a key failure, asserting audit entries for auditable actions.
+- Reference: `tests/test_stores_unit.py`, `tests/test_service_unit.py`,
+  `tests/integration/test_stores.py`.
 
 ## Related skills
 `add-model`, `add-endpoint`, `implement-story`.

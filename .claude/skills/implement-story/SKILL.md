@@ -23,9 +23,16 @@ the users+auth module (`app/users`, `app/auth`, `app/audit`) delivered in PR #1.
    state change via `app.audit.service.record(...)`.
 5. **API** — use `add-endpoint` for each route the story needs (RBAC + ownership,
    schemas, standard errors); mount routers in `app/api/v1/router.py`.
-6. **Tests** — unit (pure logic) + integration (`api` fixture, testcontainers).
-   Tag every test with `@pytest.mark.req("<ID>")` for traceability, and assert
-   audit entries for auditable actions.
+6. **Tests — BOTH levels are required** (keep the pyramid):
+   - **Unit** (no DB, must pass under `uv run pytest -m "not integration"`):
+     pure logic (parsing/criteria/calculations) + every **authorization branch**.
+     Extract pure helpers; Beanie docs can't be instantiated without a DB, so use
+     duck-typed stand-ins (`SimpleNamespace`) + `monkeypatch` for authz tests.
+   - **Integration** (`@pytest.mark.integration`, testcontainers): the DB-backed
+     happy path + a key failure, asserting audit entries for auditable actions.
+   - Tag every test with `@pytest.mark.req("<ID>")`.
+   - Reference: `tests/test_stores_unit.py`, `tests/test_service_unit.py`,
+     `tests/integration/test_stores.py`, `tests/integration/test_catalog.py`.
 7. **Gates** — all must be green:
    ```bash
    uv run ruff check . && uv run ruff format . && uv run mypy app && uv run pytest -q
@@ -36,9 +43,10 @@ the users+auth module (`app/users`, `app/auth`, `app/audit`) delivered in PR #1.
    protected: PR + green CI required).
 
 ## Definition of done (mirror docs/MVP_BACKLOG.md)
-Unit + integration tests green · coverage of the acceptance criteria · audit
-events recorded and asserted · RBAC/ownership enforced · gates pass · PR opened
-into `develop` and traced to the story ID.
+**Unit tests** (pure logic + authz, run without Docker) **and integration tests**
+(testcontainers) green · coverage of the acceptance criteria · audit events
+recorded and asserted · RBAC/ownership enforced · gates pass · PR opened into
+`develop` and traced to the story ID.
 
 ## Related skills
 `scaffold-module`, `add-model`, `add-endpoint`.
