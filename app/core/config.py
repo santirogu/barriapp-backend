@@ -71,6 +71,11 @@ class Settings(BaseSettings):
     wompi_events_secret: str = "change-me-wompi-events-secret"
     payment_currency: str = "COP"
 
+    # AI assistant (phase 2)
+    anthropic_api_key: str | None = None  # when unset, a deterministic fallback LLM is used
+    ai_model: str = "claude-sonnet-4-6"
+    ai_top_k: int = 3  # retrieved knowledge chunks per query
+
     # Observability
     sentry_dsn: str | None = None
 

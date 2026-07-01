@@ -6,6 +6,7 @@ As domain modules are implemented, include their routers here.
 from fastapi import APIRouter
 
 from app.admin.router import router as admin_router
+from app.ai.router import router as ai_router
 from app.api.v1 import health
 from app.auth.router import router as auth_router
 from app.catalog.router import router as catalog_router
@@ -39,3 +40,4 @@ api_router.include_router(notifications_router)
 api_router.include_router(admin_router)
 api_router.include_router(settlements_router)
 api_router.include_router(subscriptions_router)
+api_router.include_router(ai_router)
