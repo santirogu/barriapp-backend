@@ -38,6 +38,7 @@ def _document_models() -> list[type[Document]]:
     from app.reviews.models import Review
     from app.settlements.models import Settlement
     from app.stores.models import Store
+    from app.subscriptions.models import Subscription
     from app.users.models import User
 
     return [
@@ -56,6 +57,7 @@ def _document_models() -> list[type[Document]]:
         Notification,
         PlatformConfig,
         Settlement,
+        Subscription,
     ]
 
 
