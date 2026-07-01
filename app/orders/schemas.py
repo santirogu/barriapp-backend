@@ -48,11 +48,14 @@ class OrderPublic(BaseModel):
     status_history: list[StatusEvent]
     payment_method: PaymentMethod
     collaborator_id: str | None
+    # Present once the order has an associated delivery (after assignment); lets
+    # the client open the tracking WebSocket `/ws/deliveries/{delivery_id}`.
+    delivery_id: str | None = None
     notes: str | None
     created_at: datetime
 
     @classmethod
-    def from_order(cls, order: Order) -> "OrderPublic":
+    def from_order(cls, order: Order, delivery_id: str | None = None) -> "OrderPublic":
         return cls(
             id=str(order.id),
             code=order.code,
@@ -65,6 +68,7 @@ class OrderPublic(BaseModel):
             status_history=order.status_history,
             payment_method=order.payment_method,
             collaborator_id=str(order.collaborator_id) if order.collaborator_id else None,
+            delivery_id=delivery_id,
             notes=order.notes,
             created_at=order.created_at,
         )
