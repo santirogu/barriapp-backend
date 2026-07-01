@@ -71,6 +71,12 @@ class Settings(BaseSettings):
     wompi_events_secret: str = "change-me-wompi-events-secret"
     payment_currency: str = "COP"
 
+    # Rate limiting (Redis fixed-window, per client IP)
+    login_rate_limit: int = 10
+    login_rate_window: int = 300  # seconds
+    ai_chat_rate_limit: int = 30
+    ai_chat_rate_window: int = 60  # seconds
+
     # AI assistant (phase 2)
     anthropic_api_key: str | None = None  # when unset, a deterministic fallback LLM is used
     ai_model: str = "claude-sonnet-4-6"

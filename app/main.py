@@ -16,7 +16,7 @@ from app.core.config import Settings, get_settings
 from app.core.db import close_db, init_db
 from app.core.errors import register_exception_handlers
 from app.core.logging import configure_logging
-from app.core.middleware import RequestContextMiddleware
+from app.core.middleware import RequestContextMiddleware, SecurityHeadersMiddleware
 from app.core.redis_client import close_redis, init_redis
 
 
@@ -58,6 +58,7 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
+    app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(RequestContextMiddleware)
     if settings.cors_origins:
         app.add_middleware(

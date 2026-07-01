@@ -14,6 +14,7 @@ from app.ai.schemas import (
     KnowledgePublic,
 )
 from app.core.deps import CurrentUser, require_roles
+from app.core.ratelimit import rate_limiter
 from app.users.models import Role, User
 
 router = APIRouter(prefix="/ai", tags=["ai"])
@@ -26,7 +27,7 @@ async def ingest_knowledge(data: KnowledgeIngest, admin: AdminUser) -> Knowledge
     return KnowledgePublic.from_knowledge(await service.ingest_knowledge(admin, data))
 
 
-@router.post("/chat", response_model=ChatResponse)
+@router.post("/chat", response_model=ChatResponse, dependencies=[Depends(rate_limiter("ai_chat"))])
 async def chat(data: ChatRequest, user: CurrentUser) -> ChatResponse:
     return await service.chat(user, data)
 
