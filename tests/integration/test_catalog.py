@@ -29,7 +29,7 @@ async def _create_store(api: AsyncClient, tokens: dict[str, str], name: str) -> 
 
 @pytest.mark.req("S-3", "S-5")
 async def test_add_list_and_toggle_product(api: AsyncClient, register_user: RegisterUser) -> None:
-    tokens = await register_user("+573002000001")
+    tokens = await register_user("+573002000001", "seller")
     headers = _auth(tokens)
     store_id = await _create_store(api, tokens, "Tienda Ana")
 
@@ -56,7 +56,7 @@ async def test_add_list_and_toggle_product(api: AsyncClient, register_user: Regi
 
 @pytest.mark.req("S-3")
 async def test_non_owner_cannot_add_product(api: AsyncClient, register_user: RegisterUser) -> None:
-    owner = await register_user("+573002000002")
+    owner = await register_user("+573002000002", "seller")
     store_id = await _create_store(api, owner, "Tienda Beto")
 
     intruder = await register_user("+573002000003")

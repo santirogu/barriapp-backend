@@ -64,13 +64,13 @@ async def _create_order(
 async def test_review_after_delivery_updates_rating(
     api: AsyncClient, register_user: RegisterUser
 ) -> None:
-    seller_h = _auth(await register_user("+573060000001"))
+    seller_h = _auth(await register_user("+573060000001", "seller"))
     store_id, product_id = await _store_with_product(api, seller_h)
     client_h = _auth(await register_user("+573060000002"))
     order_id = await _create_order(api, client_h, store_id, product_id)
 
     # a collaborator (profile exists so its rating can update)
-    collab_h = _auth(await register_user("+573060000003"))
+    collab_h = _auth(await register_user("+573060000003", "collaborator"))
     collab_user_id = (
         await api.post(
             "/api/v1/me/become-collaborator",
@@ -124,7 +124,7 @@ async def test_review_after_delivery_updates_rating(
 async def test_cannot_review_undelivered_order(
     api: AsyncClient, register_user: RegisterUser
 ) -> None:
-    seller_h = _auth(await register_user("+573060000004"))
+    seller_h = _auth(await register_user("+573060000004", "seller"))
     store_id, product_id = await _store_with_product(api, seller_h)
     client_h = _auth(await register_user("+573060000005"))
     order_id = await _create_order(api, client_h, store_id, product_id)  # stays pending

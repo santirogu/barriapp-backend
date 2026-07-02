@@ -11,8 +11,12 @@ Rappi/Didi. Mobile-first, with web access.
 > See "Implementation status" below.
 
 ## Roles
-One identity (`users`) can hold multiple roles: `super_admin`, `seller` (tendero),
-`collaborator` (repartidor/mandadero), `client`.
+Each account (`users`) holds **exactly one** role (1:1), chosen at registration:
+`seller` (tendero), `collaborator` (repartidor/mandadero), `client`. A person who
+wants a second role registers a separate account (phone/email are the unique login
+identifiers; the identity document may repeat across accounts). `super_admin` is
+not self-registerable (created out-of-band). Registration collects role-specific
+fields; `client`/`collaborator` require birth date + gender and must be 18+.
 
 ## Stack (decided)
 - **Backend:** Python 3.12 (pinned) · **uv** · FastAPI (async) · Beanie 2.x on **PyMongo async** (Motor deprecated) · MongoDB · Redis · WebSockets

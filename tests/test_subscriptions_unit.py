@@ -20,7 +20,7 @@ def _returns(value: object):
 @pytest.mark.req("SUB-2")
 async def test_subscribe_by_non_owner_forbidden(monkeypatch: pytest.MonkeyPatch) -> None:
     store = SimpleNamespace(owner_id=PydanticObjectId())  # owned by someone else
-    user = SimpleNamespace(id=PydanticObjectId(), roles=[Role.SELLER])
+    user = SimpleNamespace(id=PydanticObjectId(), role=Role.SELLER)
     monkeypatch.setattr(sub_service.stores_repo, "get_by_id", _returns(store))
 
     with pytest.raises(AppError) as exc:

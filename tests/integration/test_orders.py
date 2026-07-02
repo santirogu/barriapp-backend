@@ -17,7 +17,7 @@ def _auth(tokens: dict[str, str]) -> dict[str, str]:
 async def _seller_with_product(
     api: AsyncClient, register_user: RegisterUser, phone: str, *, price: int, stock: int
 ) -> tuple[dict[str, str], str, str]:
-    headers = _auth(await register_user(phone))
+    headers = _auth(await register_user(phone, "seller"))
     store = (
         await api.post(
             "/api/v1/stores",

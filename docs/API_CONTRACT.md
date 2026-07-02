@@ -17,7 +17,7 @@
 ## 1. Auth (`/auth`)
 | Method | Path | Role | Description |
 |--------|------|------|-------------|
-| POST | `/auth/register` | public | Register with phone/email + Habeas Data consent |
+| POST | `/auth/register` | public | Register choosing one `role` (seller/client/collaborator) + role-specific fields (see auth/FRONTEND.md); 18+ for client/collaborator |
 | POST | `/auth/verify-otp` | public | Verify OTP code sent via SMS |
 | POST | `/auth/login` | public | Login → `{ accessToken, refreshToken }` |
 | POST | `/auth/refresh` | public | Refresh access token |
@@ -28,7 +28,7 @@
 ## 2. Users & profiles (`/users`, `/me`)
 | Method | Path | Role | Description |
 |--------|------|------|-------------|
-| GET | `/me` | auth | Own profile (includes active roles) |
+| GET | `/me` | auth | Own profile (includes the account's single `role`) |
 | PATCH | `/me` | auth | Update basic data |
 | GET | `/me/addresses` | auth | List addresses |
 | POST | `/me/addresses` | auth | Add address (with geo) |

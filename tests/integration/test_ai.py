@@ -18,7 +18,7 @@ def _auth(tokens: dict[str, str]) -> dict[str, str]:
 async def _promote_to_admin(phone: str) -> None:
     user = await User.find_one(User.phone == phone)
     assert user is not None
-    user.roles.append(Role.SUPER_ADMIN)
+    user.role = Role.SUPER_ADMIN
     await user.save()
 
 
@@ -60,7 +60,7 @@ async def test_ingest_and_chat_uses_knowledge(
 
 @pytest.mark.req("AI-3")
 async def test_chat_grounds_on_order_status(api: AsyncClient, register_user: RegisterUser) -> None:
-    seller_h = _auth(await register_user("+573120000003"))
+    seller_h = _auth(await register_user("+573120000003", "seller"))
     store = (
         await api.post(
             "/api/v1/stores",

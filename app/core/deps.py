@@ -68,7 +68,7 @@ def require_roles(*roles: Role) -> Callable[[User], Coroutine[Any, Any, User]]:
     allowed = set(roles)
 
     async def _checker(user: CurrentUser) -> User:
-        if not allowed.intersection(user.roles):
+        if user.role not in allowed:
             raise AppError(
                 "Insufficient permissions",
                 code="forbidden",

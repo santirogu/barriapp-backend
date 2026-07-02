@@ -42,7 +42,7 @@ async def _open_store(api: AsyncClient, seller_h: dict[str, str], name: str) -> 
 async def test_assistant_calls_order_tool_without_order_id(
     api: AsyncClient, register_user: RegisterUser
 ) -> None:
-    seller_h = _auth(await register_user("+573130000001"))
+    seller_h = _auth(await register_user("+573130000001", "seller"))
     store_id, product_id = await _open_store(api, seller_h, "Tienda")
     client_h = _auth(await register_user("+573130000002"))
     order = (
@@ -75,7 +75,7 @@ async def test_assistant_calls_order_tool_without_order_id(
 
 @pytest.mark.req("AI-3")
 async def test_assistant_searches_stores(api: AsyncClient, register_user: RegisterUser) -> None:
-    seller_h = _auth(await register_user("+573130000003"))
+    seller_h = _auth(await register_user("+573130000003", "seller"))
     await _open_store(api, seller_h, "Tienda Ana")
     client_h = _auth(await register_user("+573130000004"))
 

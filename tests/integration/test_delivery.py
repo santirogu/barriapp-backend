@@ -18,14 +18,14 @@ def _auth(tokens: dict[str, str]) -> dict[str, str]:
 async def _promote_to_admin(phone: str) -> None:
     user = await User.find_one(User.phone == phone)
     assert user is not None
-    user.roles.append(Role.SUPER_ADMIN)
+    user.role = Role.SUPER_ADMIN
     await user.save()
 
 
 async def _ready_order(
     api: AsyncClient, register_user: RegisterUser, seller_phone: str, client_phone: str
 ) -> tuple[dict[str, str], str]:
-    seller_h = _auth(await register_user(seller_phone))
+    seller_h = _auth(await register_user(seller_phone, "seller"))
     store = (
         await api.post(
             "/api/v1/stores",
@@ -76,7 +76,7 @@ async def _ready_order(
 async def _online_collaborator(
     api: AsyncClient, register_user: RegisterUser, phone: str, admin_h: dict[str, str]
 ) -> dict[str, str]:
-    collab_h = _auth(await register_user(phone))
+    collab_h = _auth(await register_user(phone, "collaborator"))
     profile = (
         await api.post(
             "/api/v1/me/become-collaborator",
@@ -144,7 +144,7 @@ async def test_assign_and_full_delivery_flow(api: AsyncClient, register_user: Re
 
 @pytest.mark.req("D-1")
 async def test_assign_requires_ready_order(api: AsyncClient, register_user: RegisterUser) -> None:
-    seller_h = _auth(await register_user("+573030000004"))
+    seller_h = _auth(await register_user("+573030000004", "seller"))
     store = (
         await api.post(
             "/api/v1/stores",

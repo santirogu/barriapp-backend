@@ -28,14 +28,34 @@ tokens. Identity/roles live in the `users` module.
 
 ### POST `/api/v1/auth/register`  (public)
 Create an account and trigger an OTP. Does **not** log the user in.
-Request:
+**One account = one role**, chosen here (the "intent selector"). The request body
+is discriminated by `role`; the required fields differ per role:
+
+| Field | `seller` | `client` | `collaborator` |
+|---|:--:|:--:|:--:|
+| `role` | ✅ | ✅ | ✅ |
+| `first_name`, `last_name` | ✅ | ✅ | ✅ |
+| `document_type`, `document_number` | ✅ | ✅ | ✅ |
+| `phone`, `email`, `password` | ✅ | ✅ | ✅ |
+| `accept_habeas_data` (must be `true`) | ✅ | ✅ | ✅ |
+| `gender` | — | ✅ | ✅ |
+| `birth_date` (ISO `YYYY-MM-DD`, **18+**) | — | ✅ | ✅ |
+
+- `role`: `"seller"` | `"client"` | `"collaborator"` (`super_admin` is **not** self-registerable).
+- `document_type`: `"CC"` | `"CE"` | `"PA"` | `"NIT"`. `gender`: `"male"` | `"female"` | `"other"`.
+- `phone` and `email` are the unique login identifiers; the identity document may
+  repeat across accounts (a person needs a separate account per role).
+
+Example (client):
 ```json
-{ "phone": "+573001112233", "password": "min-8-chars",
-  "full_name": "Ana Pérez", "email": "ana@example.com", "accept_habeas_data": true }
+{ "role": "client", "first_name": "Ana", "last_name": "Pérez",
+  "document_type": "CC", "document_number": "1032456789",
+  "phone": "+573001112233", "email": "ana@example.com", "password": "min-8-chars",
+  "gender": "female", "birth_date": "1996-04-12", "accept_habeas_data": true }
 ```
-- `email` optional. `accept_habeas_data` must be `true`.
 Response `201`: `{ "message": "Registered. Verify the OTP sent to your phone." }`
-Errors: `409 phone_taken`, `409 email_taken`, `422 consent_required`, `422 validation_error`.
+Errors: `409 phone_taken`, `409 email_taken`, `422 consent_required`,
+`422 validation_error` (missing per-role field, under 18, or bad `role`).
 
 ### POST `/api/v1/auth/verify-otp`  (public)
 Verify the OTP; activates the account and returns tokens.
@@ -50,9 +70,11 @@ Errors: `401 invalid_credentials`, `403 not_verified` (verify OTP first), `403 a
 
 ### POST `/api/v1/auth/social`  (public) — Google / Apple sign-in
 The client runs the native Google/Apple sign-in and sends us the resulting **ID
-token**; we verify it and log in (creating the account on first use, or linking to
-an existing account with the same email). No OTP — social accounts are active
-immediately.
+token**; we verify it and log in (creating the account on first use **as a
+`client`**, or linking to an existing account with the same email). No OTP —
+social accounts are active immediately. (Sellers/collaborators use normal
+registration; a future step will let a social client complete document/birth
+date/gender.)
 Request: `{ "provider": "google" | "apple", "id_token": "<provider-id-token>" }`
 Response `200`: `TokenResponse` (same shape as login).
 Errors: `401 invalid_social_token`, `403 account_suspended`,

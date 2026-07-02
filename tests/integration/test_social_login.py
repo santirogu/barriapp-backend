@@ -35,7 +35,7 @@ async def test_social_login_creates_then_reuses_user(
     me1 = (await _me(api, first.json())).json()
     assert me1["email"] == "ana@gmail.com"
     assert me1["status"] == "active"
-    assert me1["roles"] == ["client"]
+    assert me1["role"] == "client"
 
     # same provider subject → same account
     second = await api.post("/api/v1/auth/social", json={"provider": "google", "id_token": "y"})
@@ -51,10 +51,16 @@ async def test_social_login_links_existing_email(
     await api.post(
         "/api/v1/auth/register",
         json={
+            "role": "client",
+            "first_name": "Beto",
+            "last_name": "Pérez",
+            "document_type": "CC",
+            "document_number": phone.lstrip("+"),
             "phone": phone,
-            "password": "supersecret",
-            "full_name": "Beto",
             "email": "beto@x.com",
+            "password": "supersecret",
+            "gender": "male",
+            "birth_date": "1990-01-01",
             "accept_habeas_data": True,
         },
     )

@@ -20,7 +20,7 @@ def _auth(tokens: dict[str, str]) -> dict[str, str]:
 async def _grant_collaborator(phone: str) -> None:
     user = await User.find_one(User.phone == phone)
     assert user is not None
-    user.roles.append(Role.COLLABORATOR)
+    user.role = Role.COLLABORATOR
     await user.save()
 
 
@@ -49,7 +49,7 @@ async def test_publish_browse_accept_complete_and_settle(
     errand_id = errand["id"]
 
     # collaborator browses nearby open errands
-    collab_h = _auth(await register_user("+573050000002"))
+    collab_h = _auth(await register_user("+573050000002", "collaborator"))
     await _grant_collaborator("+573050000002")
     available = await api.get(
         f"/api/v1/errands/available?near={BOGOTA[0]},{BOGOTA[1]}&radius=4000", headers=collab_h

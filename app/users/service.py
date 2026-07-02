@@ -9,8 +9,8 @@ from app.users.models import User
 from app.users.schemas import UserUpdate
 
 
-def primary_role(user: User) -> str | None:
-    return str(user.roles[0]) if user.roles else None
+def primary_role(user: User) -> str:
+    return str(user.role)
 
 
 async def update_profile(user: User, data: UserUpdate) -> User:

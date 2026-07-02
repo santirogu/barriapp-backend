@@ -22,16 +22,16 @@ def test_password_hash_roundtrip() -> None:
 
 
 @pytest.mark.req("A-3")
-def test_access_token_carries_subject_and_roles() -> None:
-    token = create_access_token("507f1f77bcf86cd799439011", ["client", "seller"])
+def test_access_token_carries_subject_and_role() -> None:
+    token = create_access_token("507f1f77bcf86cd799439011", "seller")
     payload = decode_token(token)
     assert payload["sub"] == "507f1f77bcf86cd799439011"
     assert payload["type"] == ACCESS_TOKEN_TYPE
-    assert payload["roles"] == ["client", "seller"]
+    assert payload["role"] == "seller"
 
 
 @pytest.mark.req("A-3")
 def test_refresh_token_type() -> None:
     payload = decode_token(create_refresh_token("507f1f77bcf86cd799439011"))
     assert payload["type"] == REFRESH_TOKEN_TYPE
-    assert "roles" not in payload
+    assert "role" not in payload

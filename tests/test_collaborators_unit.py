@@ -11,6 +11,7 @@ from app.collaborators.repository import build_available_near_query
 from app.collaborators.schemas import AvailabilityUpdate, BecomeCollaborator
 from app.collaborators.service import resolve_availability
 from app.core.errors import AppError
+from app.users.models import Role
 
 
 def _returns(value: object):
@@ -54,7 +55,7 @@ def test_available_near_query() -> None:
 
 @pytest.mark.req("D-2")
 async def test_cannot_go_online_when_not_approved(monkeypatch: pytest.MonkeyPatch) -> None:
-    user = SimpleNamespace(id=PydanticObjectId(), roles=[])
+    user = SimpleNamespace(id=PydanticObjectId(), role=Role.COLLABORATOR)
     profile = SimpleNamespace(verification_status=VerificationStatus.PENDING)
     monkeypatch.setattr(collab_service.collab_repo, "get_by_user_id", _returns(profile))
 
@@ -68,7 +69,7 @@ async def test_cannot_go_online_when_not_approved(monkeypatch: pytest.MonkeyPatc
 
 @pytest.mark.req("U-5")
 async def test_become_collaborator_twice_conflicts(monkeypatch: pytest.MonkeyPatch) -> None:
-    user = SimpleNamespace(id=PydanticObjectId(), roles=[])
+    user = SimpleNamespace(id=PydanticObjectId(), role=Role.COLLABORATOR)
     monkeypatch.setattr(collab_service.collab_repo, "get_by_user_id", _returns(object()))
 
     with pytest.raises(AppError) as exc:

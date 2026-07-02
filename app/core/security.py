@@ -1,6 +1,6 @@
 """Password hashing and JWT creation/verification.
 
-Access tokens carry the subject (user id) and roles; refresh tokens carry only
+Access tokens carry the subject (user id) and role; refresh tokens carry only
 the subject. Both are signed with the configured secret/algorithm.
 """
 
@@ -45,13 +45,13 @@ def _create_token(
     return token
 
 
-def create_access_token(subject: str, roles: list[str]) -> str:
+def create_access_token(subject: str, role: str) -> str:
     settings = get_settings()
     return _create_token(
         subject,
         ACCESS_TOKEN_TYPE,
         timedelta(minutes=settings.access_token_expire_minutes),
-        extra={"roles": roles},
+        extra={"role": role},
     )
 
 

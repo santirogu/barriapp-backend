@@ -31,16 +31,15 @@ from app.core.security import (
     verify_password,
 )
 from app.users import repository as users_repo
-from app.users.models import Consent, User, UserStatus
+from app.users.models import Consent, Role, User, UserStatus
 from app.users.service import primary_role
 
 CONSENT_VERSION = "1.0"
 
 
 def _tokens(user: User) -> TokenResponse:
-    roles = [str(role) for role in user.roles]
     return TokenResponse(
-        access_token=create_access_token(str(user.id), roles),
+        access_token=create_access_token(str(user.id), str(user.role)),
         refresh_token=create_refresh_token(str(user.id)),
     )
 
@@ -56,16 +55,23 @@ async def register(data: RegisterRequest) -> None:
         raise AppError(
             "Phone already registered", code="phone_taken", status_code=status.HTTP_409_CONFLICT
         )
-    if data.email is not None and await users_repo.get_by_email(data.email) is not None:
+    if await users_repo.get_by_email(data.email) is not None:
         raise AppError(
             "Email already registered", code="email_taken", status_code=status.HTTP_409_CONFLICT
         )
 
+    # gender/birth_date only exist on client/collaborator registrations.
     user = User(
+        role=data.role,
         phone=data.phone,
         email=data.email,
         password_hash=hash_password(data.password),
-        full_name=data.full_name,
+        first_name=data.first_name,
+        last_name=data.last_name,
+        document_type=data.document_type,
+        document_number=data.document_number,
+        gender=getattr(data, "gender", None),
+        birth_date=getattr(data, "birth_date", None),
         consent=Consent(habeas_data=True, version=CONSENT_VERSION, accepted_at=datetime.now(UTC)),
     )
     await users_repo.insert(user)
@@ -224,8 +230,13 @@ async def social_login(data: SocialLoginRequest) -> TokenResponse:
             linked = True
 
     if user is None:
+        # Social sign-up creates a client; the missing profile fields
+        # (document, birth_date, gender) are completed in a later step (PR2).
+        first, _, last = (identity.full_name or "Usuario BarriApp").partition(" ")
         user = User(
-            full_name=identity.full_name or "Usuario BarriApp",
+            role=Role.CLIENT,
+            first_name=first,
+            last_name=last or first,
             email=identity.email,
             status=UserStatus.ACTIVE,  # email verified by the provider
             consent=Consent(

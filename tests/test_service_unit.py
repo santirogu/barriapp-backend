@@ -29,7 +29,7 @@ def _returns(value: object):
 
 
 def _user(*roles: Role) -> SimpleNamespace:
-    return SimpleNamespace(id=PydanticObjectId(), roles=list(roles) or [Role.CLIENT])
+    return SimpleNamespace(id=PydanticObjectId(), role=roles[0] if roles else Role.CLIENT)
 
 
 def _store(owner_id: PydanticObjectId, status: StoreStatus = StoreStatus.CLOSED) -> SimpleNamespace:

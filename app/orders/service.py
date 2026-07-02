@@ -28,7 +28,7 @@ def _utcnow() -> datetime:
 
 
 def _is_admin(user: User) -> bool:
-    return Role.SUPER_ADMIN in user.roles
+    return user.role == Role.SUPER_ADMIN
 
 
 def _not_found() -> AppError:

@@ -51,7 +51,7 @@ async def list_users(
 ) -> list[User]:
     criteria: dict[str, Any] = {}
     if role is not None:
-        criteria["roles"] = role.value
+        criteria["role"] = role.value
     if user_status is not None:
         criteria["status"] = user_status.value
     if query:

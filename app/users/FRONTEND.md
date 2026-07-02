@@ -3,28 +3,37 @@
 > Contract for the **implemented** users endpoints (source of truth: `app/users`).
 
 ## Context
-One identity per person. A user may hold multiple **roles** at once. Role-specific
-data lives in other modules (a seller's store in `stores`, etc.). New users start
-as `client` with status `pending_verification` until they verify the OTP.
+**One account = one role** (1:1), fixed at registration. Role-specific data lives
+in other modules (a seller's store in `stores`, etc.). New users start with status
+`pending_verification` until they verify the OTP. A person who wants a second role
+registers a separate account.
 
 ## Enums
-- `role`: `client` | `seller` | `collaborator` | `super_admin`
+- `role`: `client` | `seller` | `collaborator` | `super_admin` (single value)
 - `status`: `pending_verification` | `active` | `suspended`
+- `document_type`: `CC` | `CE` | `PA` | `NIT`
+- `gender`: `male` | `female` | `other`
 
 ## Model — `UserPublic`
 ```json
 {
   "id": "665f...",
+  "role": "client",
   "phone": "+573001112233",
   "email": "ana@example.com",
-  "full_name": "Ana Pérez",
-  "roles": ["client"],
+  "first_name": "Ana",
+  "last_name": "Pérez",
+  "document_type": "CC",
+  "document_number": "1032456789",
+  "gender": "female",
+  "birth_date": "1996-04-12",
   "status": "active",
   "avatar_url": null
 }
 ```
-`email` and `avatar_url` may be `null`. `roles` grows as the user becomes a seller
-(creating a store adds `seller`) or is granted others.
+`email`, `avatar_url`, and (for sellers) `gender`/`birth_date` may be `null`.
+`document_type`/`document_number` are `null` only on social-login accounts until
+the profile is completed.
 
 ## Endpoints
 
@@ -35,17 +44,17 @@ Returns the current user's `UserPublic`. Use it after login to bootstrap the app
 ### PATCH `/api/v1/me`  (auth)
 Partial update. Any subset of:
 ```json
-{ "full_name": "New Name", "email": "new@example.com", "avatar_url": "https://..." }
+{ "first_name": "New", "last_name": "Name", "email": "new@example.com", "avatar_url": "https://..." }
 ```
 Response `200`: updated `UserPublic`. Errors: `401 not_authenticated`, `422 validation_error`.
 
 ## Notes for the client
-- Drive navigation/permissions from `roles` (e.g. show the "My store" area when
-  `roles` includes `seller`).
+- Drive navigation/permissions from the single `role` (e.g. show the "My store"
+  area when `role == "seller"`).
 - `status = suspended` → the API returns `403 account_suspended` on protected
   calls; show a blocked state and route to support.
 
 ## Not yet implemented (planned — see docs/API_CONTRACT.md §2)
-Address management (`/me/addresses`), device tokens (`/me/device-tokens`),
-`become-seller` / `become-collaborator`, and admin user management. (Note: today a
-store is created directly via `POST /stores`, which also grants the `seller` role.)
+Address management (`/me/addresses`), device tokens (`/me/device-tokens`), the
+social "complete profile" step, and admin user management. (Note: a seller creates
+their store directly via `POST /stores`; the seller role comes from registration.)

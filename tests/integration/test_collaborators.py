@@ -16,7 +16,7 @@ def _auth(tokens: dict[str, str]) -> dict[str, str]:
 async def _promote_to_admin(phone: str) -> None:
     user = await User.find_one(User.phone == phone)
     assert user is not None
-    user.roles.append(Role.SUPER_ADMIN)
+    user.role = Role.SUPER_ADMIN
     await user.save()
 
 
@@ -27,7 +27,7 @@ _BECOME = {"vehicle_type": "bike", "id_number": "1032456789"}
 async def test_onboarding_verification_and_go_online(
     api: AsyncClient, register_user: RegisterUser
 ) -> None:
-    collab_h = _auth(await register_user("+573020000001"))
+    collab_h = _auth(await register_user("+573020000001", "collaborator"))
 
     created = await api.post("/api/v1/me/become-collaborator", json=_BECOME, headers=collab_h)
     assert created.status_code == 201, created.text
@@ -72,12 +72,12 @@ async def test_onboarding_verification_and_go_online(
 
     # role granted on approval
     me = await api.get("/api/v1/me", headers=collab_h)
-    assert "collaborator" in me.json()["roles"]
+    assert me.json()["role"] == "collaborator"
 
 
 @pytest.mark.req("D-6")
 async def test_verification_requires_admin(api: AsyncClient, register_user: RegisterUser) -> None:
-    collab_h = _auth(await register_user("+573020000003"))
+    collab_h = _auth(await register_user("+573020000003", "collaborator"))
     profile = (
         await api.post("/api/v1/me/become-collaborator", json=_BECOME, headers=collab_h)
     ).json()

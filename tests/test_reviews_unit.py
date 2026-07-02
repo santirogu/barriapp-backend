@@ -11,6 +11,7 @@ from app.reviews import service as reviews_service
 from app.reviews.logic import recompute_rating
 from app.reviews.models import ReviewTargetType
 from app.reviews.schemas import ReviewCreate
+from app.users.models import Role
 
 
 def _returns(value: object):
@@ -30,7 +31,7 @@ def test_recompute_rating() -> None:
 @pytest.mark.req("R-1")
 async def test_review_requires_delivered_order(monkeypatch: pytest.MonkeyPatch) -> None:
     uid = PydanticObjectId()
-    user = SimpleNamespace(id=uid, roles=[])
+    user = SimpleNamespace(id=uid, role=Role.CLIENT)
     order = SimpleNamespace(client_id=uid, status=OrderStatus.PENDING)
     monkeypatch.setattr(reviews_service.orders_repo, "get_by_id", _returns(order))
 
@@ -47,7 +48,7 @@ async def test_review_requires_delivered_order(monkeypatch: pytest.MonkeyPatch) 
 
 @pytest.mark.req("R-1")
 async def test_review_only_by_order_owner(monkeypatch: pytest.MonkeyPatch) -> None:
-    user = SimpleNamespace(id=PydanticObjectId(), roles=[])
+    user = SimpleNamespace(id=PydanticObjectId(), role=Role.CLIENT)
     order = SimpleNamespace(client_id=PydanticObjectId(), status=OrderStatus.DELIVERED)
     monkeypatch.setattr(reviews_service.orders_repo, "get_by_id", _returns(order))
 

@@ -24,7 +24,7 @@ pytestmark = pytest.mark.integration
 async def test_ws_streams_snapshot_and_updates(
     api: AsyncClient, register_user: RegisterUser
 ) -> None:
-    tokens = await register_user("+573090000001")
+    tokens = await register_user("+573090000001", "collaborator")
     token = tokens["access_token"]
     user = await User.find_one(User.phone == "+573090000001")
     assert user is not None

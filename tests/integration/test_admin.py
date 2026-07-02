@@ -18,7 +18,7 @@ def _auth(tokens: dict[str, str]) -> dict[str, str]:
 async def _promote_to_admin(phone: str) -> None:
     user = await User.find_one(User.phone == phone)
     assert user is not None
-    user.roles.append(Role.SUPER_ADMIN)
+    user.role = Role.SUPER_ADMIN
     await user.save()
 
 
@@ -27,7 +27,7 @@ async def test_admin_metrics_users_audit_and_config(
     api: AsyncClient, register_user: RegisterUser
 ) -> None:
     # seed some data: a seller with a store
-    seller_h = _auth(await register_user("+573080000001"))
+    seller_h = _auth(await register_user("+573080000001", "seller"))
     store = (
         await api.post(
             "/api/v1/stores",

@@ -69,7 +69,7 @@ async def _create_order(
 async def test_cash_settlement_writes_ledger_and_is_idempotent(
     api: AsyncClient, register_user: RegisterUser
 ) -> None:
-    seller_h = _auth(await register_user("+573040000001"))
+    seller_h = _auth(await register_user("+573040000001", "seller"))
     store_id, product_id = (await _store_with_product(api, seller_h)).split("|")
     client_h = _auth(await register_user("+573040000002"))
     order_id = await _create_order(api, client_h, store_id, product_id, "cash")
@@ -96,7 +96,7 @@ async def test_cash_settlement_writes_ledger_and_is_idempotent(
 async def test_wompi_intent_and_webhook_approval(
     api: AsyncClient, register_user: RegisterUser
 ) -> None:
-    seller_h = _auth(await register_user("+573040000003"))
+    seller_h = _auth(await register_user("+573040000003", "seller"))
     store_id, product_id = (await _store_with_product(api, seller_h)).split("|")
     client_h = _auth(await register_user("+573040000004"))
     order_id = await _create_order(api, client_h, store_id, product_id, "wompi")

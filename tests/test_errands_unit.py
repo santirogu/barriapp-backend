@@ -51,7 +51,7 @@ def test_available_query() -> None:
 
 @pytest.mark.req("E-3")
 async def test_accept_requires_collaborator_role() -> None:
-    user = SimpleNamespace(id=PydanticObjectId(), roles=[Role.CLIENT])
+    user = SimpleNamespace(id=PydanticObjectId(), role=Role.CLIENT)
     with pytest.raises(AppError) as exc:
         await errands_service.accept(user, PydanticObjectId())
     assert exc.value.status_code == 403
@@ -59,7 +59,7 @@ async def test_accept_requires_collaborator_role() -> None:
 
 @pytest.mark.req("E-3")
 async def test_advance_by_non_assigned_forbidden(monkeypatch: pytest.MonkeyPatch) -> None:
-    user = SimpleNamespace(id=PydanticObjectId(), roles=[Role.COLLABORATOR])
+    user = SimpleNamespace(id=PydanticObjectId(), role=Role.COLLABORATOR)
     errand = SimpleNamespace(collaborator_id=PydanticObjectId(), status=ErrandStatus.ASSIGNED)
     monkeypatch.setattr(errands_service.errands_repo, "get_by_id", _returns(errand))
     with pytest.raises(AppError) as exc:

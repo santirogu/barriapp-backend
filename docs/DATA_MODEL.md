@@ -5,10 +5,11 @@
 
 ## 1. Design principles
 
-- **Identity separated from role.** One `person` = one document in `users`.
-  Role-specific data lives in associated profiles (`stores`,
-  `collaborator_profiles`). This lets a single person be both a client **and** a
-  seller without duplicating identity.
+- **One account = one role (1:1).** Each `users` document has a single `role`,
+  chosen at registration. Role-specific data lives in associated profiles
+  (`stores`, `collaborator_profiles`). A person who wants a second role registers
+  a **separate account**; `phone`/`email` are the unique login identifiers, while
+  the identity document may repeat across a person's accounts.
 - **References vs. embedding.** Embed what is always read together and does not
   grow unbounded (user addresses, order items as a *snapshot*). Reference what
   has its own lifecycle or grows (orders, payments, products).
@@ -51,9 +52,10 @@ erDiagram
     AUDIT_LOGS }o--|| USERS : "records action of"
 ```
 
-**Role legend on `users`:** the `roles: []` field determines which
-profiles/actions apply. There are not 4 user collections; there is one identity
-and optional per-role profiles.
+**Role legend on `users`:** the single `role` field determines which
+profiles/actions apply. **One account = one role (1:1)**, fixed at registration;
+a person who wants a second role registers a separate account. There are not 4
+user collections; there is one identity per account and optional per-role profiles.
 
 ## 3. Collections
 
@@ -61,19 +63,26 @@ and optional per-role profiles.
 | Field | Type | Notes |
 |-------|------|-------|
 | `_id` | ObjectId | |
-| `phone` | string | **Primary login in Colombia**. Unique. |
-| `email` | string? | Unique (sparse), optional |
-| `passwordHash` | string | bcrypt |
-| `fullName` | string | |
-| `roles` | string[] | `["client"]`, `"seller"`, `"collaborator"`, `"super_admin"` |
+| `role` | enum | **Single** role: `client` \| `seller` \| `collaborator` \| `super_admin` (last not self-registerable) |
+| `phone` | string? | **Primary login in Colombia**. Unique. Null on social accounts. |
+| `email` | string? | Unique. Login identifier. |
+| `passwordHash` | string? | argon2 (pwdlib). Null on social accounts. |
+| `firstName` / `lastName` | string | |
+| `documentType` | enum? | `CC` \| `CE` \| `PA` \| `NIT`. Null until profile complete (social). |
+| `documentNumber` | string? | **Not unique** — repeats across role accounts of one person. |
+| `gender` | enum? | `male` \| `female` \| `other`. Client/collaborator only. |
+| `birthDate` | date? | Client/collaborator only; must be 18+ at registration. |
 | `status` | enum | `pending_verification` \| `active` \| `suspended` |
 | `avatarUrl` | string? | |
 | `addresses` | Address[] | **embedded** (see 4.1) |
 | `deviceTokens` | string[] | FCM tokens for push |
+| `googleSub` / `appleSub` | string? | Social-login subjects. Unique (partial). |
 | `consent` | object | `{ habeasData: bool, version: string, acceptedAt: date }` — Ley 1581 |
 | `createdAt` / `updatedAt` | date | |
 
-**Indexes:** `phone` (unique), `email` (unique, sparse), `roles`.
+**Indexes:** `phone` (unique, partial), `email` (unique, partial),
+`googleSub`/`appleSub` (unique, partial), `role`. `documentNumber` is **not**
+unique (intentionally repeats across accounts).
 
 ### 3.2 `stores` — seller/store profile
 | Field | Type | Notes |

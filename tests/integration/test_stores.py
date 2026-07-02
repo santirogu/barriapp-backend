@@ -25,7 +25,7 @@ def _store_payload(name: str, coords: list[float]) -> dict[str, object]:
 async def test_create_store_grants_seller_and_is_geo_searchable(
     api: AsyncClient, register_user: RegisterUser
 ) -> None:
-    tokens = await register_user("+573001000001")
+    tokens = await register_user("+573001000001", "seller")
     headers = _auth(tokens)
 
     resp = await api.post(
@@ -36,7 +36,7 @@ async def test_create_store_grants_seller_and_is_geo_searchable(
     assert store["status"] == "closed"
 
     me = await api.get("/api/v1/me", headers=headers)
-    assert "seller" in me.json()["roles"]
+    assert me.json()["role"] == "seller"
 
     opened = await api.patch(
         f"/api/v1/stores/{store['id']}/status", json={"status": "open"}, headers=headers
@@ -53,7 +53,7 @@ async def test_create_store_grants_seller_and_is_geo_searchable(
 async def test_list_my_stores_returns_only_owned(
     api: AsyncClient, register_user: RegisterUser
 ) -> None:
-    owner = _auth(await register_user("+573001000010"))
+    owner = _auth(await register_user("+573001000010", "seller"))
     created = await api.post(
         "/api/v1/stores", json=_store_payload("Mi Tienda", BOGOTA), headers=owner
     )
@@ -72,7 +72,7 @@ async def test_list_my_stores_returns_only_owned(
 
 @pytest.mark.req("S-1")
 async def test_non_owner_cannot_update_store(api: AsyncClient, register_user: RegisterUser) -> None:
-    owner = await register_user("+573001000002")
+    owner = await register_user("+573001000002", "seller")
     resp = await api.post(
         "/api/v1/stores", json=_store_payload("Tienda Beto", BOGOTA), headers=_auth(owner)
     )

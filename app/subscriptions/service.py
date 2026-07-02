@@ -33,7 +33,7 @@ async def _owned_store(user: User, store_id: PydanticObjectId) -> Store:
     store = await stores_repo.get_by_id(store_id)
     if store is None:
         raise AppError("Store not found", code="not_found", status_code=404)
-    if store.owner_id != user.id and Role.SUPER_ADMIN not in user.roles:
+    if store.owner_id != user.id and user.role != Role.SUPER_ADMIN:
         raise AppError(
             "Not the store owner", code="forbidden", status_code=status.HTTP_403_FORBIDDEN
         )
