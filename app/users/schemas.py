@@ -2,8 +2,9 @@
 
 from datetime import date
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
+from app.auth.logic import MIN_AGE, is_adult
 from app.users.models import DocumentType, Gender, Role, User, UserStatus
 
 
@@ -44,3 +45,21 @@ class UserUpdate(BaseModel):
     last_name: str | None = None
     email: EmailStr | None = None
     avatar_url: str | None = None
+
+
+class CompleteProfileRequest(BaseModel):
+    """Fields a social-login (client) account must provide before activating."""
+
+    document_type: DocumentType
+    document_number: str = Field(min_length=3, max_length=40)
+    gender: Gender
+    birth_date: date
+
+    @field_validator("birth_date")
+    @classmethod
+    def _must_be_adult(cls, value: date) -> date:
+        if value > date.today():
+            raise ValueError("birth_date cannot be in the future")
+        if not is_adult(value, date.today()):
+            raise ValueError(f"must be at least {MIN_AGE} years old to register")
+        return value

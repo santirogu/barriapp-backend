@@ -21,9 +21,10 @@ from app.users.repository import get_by_id
 _bearer = HTTPBearer(auto_error=False)
 
 
-async def get_current_user(
-    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer)],
+async def _resolve_token_user(
+    credentials: HTTPAuthorizationCredentials | None,
 ) -> User:
+    """Resolve a bearer access token to its user, rejecting suspended accounts."""
     if credentials is None:
         raise AppError(
             "Not authenticated", code="not_authenticated", status_code=status.HTTP_401_UNAUTHORIZED
@@ -60,7 +61,33 @@ async def get_current_user(
     return user
 
 
+async def get_current_user(
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer)],
+) -> User:
+    """Authenticated, fully-onboarded user. Blocks accounts that still need to
+    complete their profile (social sign-up) — those may only use the profile
+    endpoints via ``get_current_user_allow_incomplete``."""
+    user = await _resolve_token_user(credentials)
+    if user.status == UserStatus.PROFILE_INCOMPLETE:
+        raise AppError(
+            "Complete your profile to continue",
+            code="profile_incomplete",
+            status_code=status.HTTP_403_FORBIDDEN,
+        )
+    return user
+
+
+async def get_current_user_allow_incomplete(
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer)],
+) -> User:
+    """Like ``get_current_user`` but allows ``profile_incomplete`` accounts.
+    Used by ``GET /me`` and ``POST /me/complete-profile`` so a social user can see
+    their status and finish onboarding."""
+    return await _resolve_token_user(credentials)
+
+
 CurrentUser = Annotated[User, Depends(get_current_user)]
+CurrentUserAllowIncomplete = Annotated[User, Depends(get_current_user_allow_incomplete)]
 
 
 def require_roles(*roles: Role) -> Callable[[User], Coroutine[Any, Any, User]]:

@@ -10,7 +10,8 @@ registers a separate account.
 
 ## Enums
 - `role`: `client` | `seller` | `collaborator` | `super_admin` (single value)
-- `status`: `pending_verification` | `active` | `suspended`
+- `status`: `pending_verification` | `profile_incomplete` | `active` | `suspended`
+  (`profile_incomplete` = social sign-up that still needs `POST /me/complete-profile`)
 - `document_type`: `CC` | `CE` | `PA` | `NIT`
 - `gender`: `male` | `female` | `other`
 
@@ -47,6 +48,21 @@ Partial update. Any subset of:
 { "first_name": "New", "last_name": "Name", "email": "new@example.com", "avatar_url": "https://..." }
 ```
 Response `200`: updated `UserPublic`. Errors: `401 not_authenticated`, `422 validation_error`.
+
+### POST `/api/v1/me/complete-profile`  (auth) — social sign-up only
+A new social (Google/Apple) account is `profile_incomplete`; this finishes
+onboarding and sets it `active`. Request:
+```json
+{ "document_type": "CC", "document_number": "1032456789",
+  "gender": "female", "birth_date": "1996-04-12" }
+```
+- `document_type`: `CC`/`CE`/`PA`/`NIT`; `gender`: `male`/`female`/`other`; **18+**.
+Response `200`: updated `UserPublic` (status now `active`).
+Errors: `401 not_authenticated`, `409 profile_already_complete`, `422 validation_error`.
+
+> Flow: after social login, read `GET /me`; if `status == "profile_incomplete"`,
+> route the user to this form before letting them use the app. While incomplete,
+> other auth-required endpoints return `403 profile_incomplete`.
 
 ## Notes for the client
 - Drive navigation/permissions from the single `role` (e.g. show the "My store"

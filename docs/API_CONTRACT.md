@@ -30,6 +30,7 @@
 |--------|------|------|-------------|
 | GET | `/me` | auth | Own profile (includes the account's single `role`) |
 | PATCH | `/me` | auth | Update basic data |
+| POST | `/me/complete-profile` | auth | Social sign-up only: set document/birth date/gender (18+) → activate |
 | GET | `/me/addresses` | auth | List addresses |
 | POST | `/me/addresses` | auth | Add address (with geo) |
 | PATCH | `/me/addresses/{id}` | auth | Edit / mark default |
