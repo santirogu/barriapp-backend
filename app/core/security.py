@@ -7,7 +7,7 @@ the subject. Both are signed with the configured secret/algorithm.
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from jose import jwt
+import jwt
 from pwdlib import PasswordHash
 
 from app.core.config import get_settings
@@ -65,7 +65,7 @@ def create_refresh_token(subject: str) -> str:
 
 
 def decode_token(token: str) -> dict[str, Any]:
-    """Decode and verify a JWT. Raises ``jose.JWTError`` on invalid/expired tokens."""
+    """Decode and verify a JWT. Raises ``jwt.PyJWTError`` on invalid/expired tokens."""
     settings = get_settings()
     payload: dict[str, Any] = jwt.decode(
         token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm]

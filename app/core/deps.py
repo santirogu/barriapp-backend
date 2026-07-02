@@ -11,7 +11,7 @@ from typing import Annotated, Any
 from beanie import PydanticObjectId
 from fastapi import Depends, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from jose import JWTError
+from jwt import PyJWTError
 
 from app.core.errors import AppError
 from app.core.security import ACCESS_TOKEN_TYPE, decode_token
@@ -30,7 +30,7 @@ async def get_current_user(
         )
     try:
         payload = decode_token(credentials.credentials)
-    except JWTError as exc:
+    except PyJWTError as exc:
         raise AppError(
             "Invalid or expired token",
             code="invalid_token",

@@ -76,19 +76,23 @@ _APPLE_ISSUER = "https://appleid.apple.com"
 
 
 async def _verify_apple(id_token: str, client_id: str) -> SocialIdentity:
+    import json
+
     import httpx
-    from jose import jwt
+    import jwt
+    from jwt.algorithms import RSAAlgorithm
 
     try:
         async with httpx.AsyncClient(timeout=5) as client:
             resp = await client.get(_APPLE_JWKS_URL)
             resp.raise_for_status()
             jwks = resp.json()
-        headers = jwt.get_unverified_header(id_token)
-        key = next(k for k in jwks["keys"] if k["kid"] == headers["kid"])
+        kid = jwt.get_unverified_header(id_token)["kid"]
+        key_data = next(k for k in jwks["keys"] if k["kid"] == kid)
+        public_key = RSAAlgorithm.from_jwk(json.dumps(key_data))
         claims: dict[str, object] = jwt.decode(
             id_token,
-            key,
+            public_key,  # type: ignore[arg-type]
             algorithms=["RS256"],
             audience=client_id,
             issuer=_APPLE_ISSUER,

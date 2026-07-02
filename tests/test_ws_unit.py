@@ -4,7 +4,7 @@ from types import SimpleNamespace
 
 import pytest
 from beanie import PydanticObjectId
-from jose import JWTError
+from jwt import PyJWTError
 
 from app.delivery import ws as ws_mod
 from app.users.models import UserStatus
@@ -26,7 +26,7 @@ async def test_resolve_ws_user_missing_token() -> None:
 @pytest.mark.req("D-4")
 async def test_resolve_ws_user_invalid_token(monkeypatch: pytest.MonkeyPatch) -> None:
     def _raise(_t: str) -> dict[str, object]:
-        raise JWTError("bad")
+        raise PyJWTError("bad")
 
     monkeypatch.setattr(ws_mod, "decode_token", _raise)
     assert await ws_mod.resolve_ws_user("bad") is None
