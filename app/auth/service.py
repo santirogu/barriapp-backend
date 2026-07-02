@@ -238,7 +238,9 @@ async def social_login(data: SocialLoginRequest) -> TokenResponse:
             first_name=first,
             last_name=last or first,
             email=identity.email,
-            status=UserStatus.ACTIVE,  # email verified by the provider
+            # Email is provider-verified, but the per-role fields (document, birth
+            # date, gender) are still missing → must be completed before operating.
+            status=UserStatus.PROFILE_INCOMPLETE,
             consent=Consent(
                 habeas_data=True, version=CONSENT_VERSION, accepted_at=datetime.now(UTC)
             ),

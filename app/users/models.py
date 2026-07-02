@@ -38,6 +38,7 @@ class Gender(StrEnum):
 
 class UserStatus(StrEnum):
     PENDING_VERIFICATION = "pending_verification"
+    PROFILE_INCOMPLETE = "profile_incomplete"  # social sign-up: missing per-role fields
     ACTIVE = "active"
     SUSPENDED = "suspended"
 

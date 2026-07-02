@@ -71,10 +71,12 @@ Errors: `401 invalid_credentials`, `403 not_verified` (verify OTP first), `403 a
 ### POST `/api/v1/auth/social`  (public) — Google / Apple sign-in
 The client runs the native Google/Apple sign-in and sends us the resulting **ID
 token**; we verify it and log in (creating the account on first use **as a
-`client`**, or linking to an existing account with the same email). No OTP —
-social accounts are active immediately. (Sellers/collaborators use normal
-registration; a future step will let a social client complete document/birth
-date/gender.)
+`client`**, or linking to an existing account with the same email). No OTP.
+A **new** social account starts with status `profile_incomplete` and returns
+tokens, but auth-required business endpoints answer `403 profile_incomplete`
+until the client calls **`POST /me/complete-profile`** (see users/FRONTEND.md)
+with document, birth date and gender (18+). Linking to an existing account keeps
+that account's status. Sellers/collaborators use normal registration.
 Request: `{ "provider": "google" | "apple", "id_token": "<provider-id-token>" }`
 Response `200`: `TokenResponse` (same shape as login).
 Errors: `401 invalid_social_token`, `403 account_suspended`,
