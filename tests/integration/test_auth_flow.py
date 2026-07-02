@@ -63,6 +63,29 @@ async def test_login_with_wrong_password_is_rejected(api: AsyncClient) -> None:
     assert resp.json()["error"]["code"] == "invalid_credentials"
 
 
+@pytest.mark.req("A-1")
+async def test_underage_collaborator_is_rejected_with_422(api: AsyncClient) -> None:
+    resp = await api.post(
+        "/api/v1/auth/register",
+        json={
+            "role": "collaborator",
+            "first_name": "Kid",
+            "last_name": "Menor",
+            "document_type": "CC",
+            "document_number": "123456",
+            "phone": "+573009990000",
+            "email": "kid@barriapp.co",
+            "password": "supersecret",
+            "gender": "male",
+            "birth_date": "2015-01-01",
+            "accept_habeas_data": True,
+        },
+    )
+    # Must be a clean 422 (a custom-validator ValueError must not leak as 500).
+    assert resp.status_code == 422, resp.text
+    assert resp.json()["error"]["code"] == "validation_error"
+
+
 @pytest.mark.req("A-5")
 async def test_me_requires_authentication(api: AsyncClient) -> None:
     resp = await api.get("/api/v1/me")
