@@ -20,7 +20,7 @@ def _utcnow() -> datetime:
 
 
 def _is_admin(user: User) -> bool:
-    return Role.SUPER_ADMIN in user.roles
+    return user.role == Role.SUPER_ADMIN
 
 
 async def _load_owned_store(user: User, store_id: PydanticObjectId) -> Store:
@@ -35,6 +35,13 @@ async def _load_owned_store(user: User, store_id: PydanticObjectId) -> Store:
 
 
 async def create_store(user: User, data: StoreCreate) -> Store:
+    # Role is fixed at registration: only sellers own stores.
+    if user.role != Role.SELLER:
+        raise AppError(
+            "Only sellers can create stores",
+            code="forbidden",
+            status_code=status.HTTP_403_FORBIDDEN,
+        )
     store = Store(
         owner_id=user.id,
         name=data.name,
@@ -53,21 +60,6 @@ async def create_store(user: User, data: StoreCreate) -> Store:
         target_type="store",
         target_id=store.id,
     )
-
-    # Grant the seller role on first store (become a seller).
-    if Role.SELLER not in user.roles:
-        user.roles.append(Role.SELLER)
-        user.updated_at = _utcnow()
-        await user.save()
-        await audit.record(
-            module=AuditModule.USERS,
-            action="user.role.granted",
-            actor_id=user.id,
-            actor_role=primary_role(user),
-            target_type="user",
-            target_id=user.id,
-            changes={"role": "seller"},
-        )
     return store
 
 

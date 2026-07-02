@@ -11,6 +11,7 @@ from app.delivery.logic import next_delivery_status, order_status_for
 from app.delivery.models import DeliveryStatus
 from app.delivery.schemas import DeliveryStatusUpdate
 from app.orders.models import OrderStatus
+from app.users.models import Role
 
 
 def _returns(value: object):
@@ -41,7 +42,7 @@ def test_order_status_sync() -> None:
 async def test_advance_by_non_assigned_collaborator_forbidden(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    user = SimpleNamespace(id=PydanticObjectId(), roles=[])
+    user = SimpleNamespace(id=PydanticObjectId(), role=Role.CLIENT)
     delivery = SimpleNamespace(
         collaborator_id=PydanticObjectId(),  # someone else
         status=DeliveryStatus.ASSIGNED,

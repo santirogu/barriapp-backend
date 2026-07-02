@@ -20,7 +20,7 @@ from app.core.db import close_db, get_database, init_db
 from app.core.redis_client import close_redis, get_redis, init_redis
 from app.main import create_app
 
-RegisterUser = Callable[[str], Awaitable[dict[str, str]]]
+RegisterUser = Callable[..., Awaitable[dict[str, str]]]
 
 
 def _ensure_docker_host() -> None:
@@ -93,16 +93,22 @@ async def api(_services: None) -> AsyncIterator[AsyncClient]:
 async def register_user(api: AsyncClient) -> RegisterUser:
     """Return a helper that registers + OTP-verifies a user and yields their tokens."""
 
-    async def _register(phone: str) -> dict[str, str]:
-        resp = await api.post(
-            "/api/v1/auth/register",
-            json={
-                "phone": phone,
-                "password": "supersecret",
-                "full_name": "Test User",
-                "accept_habeas_data": True,
-            },
-        )
+    async def _register(phone: str, role: str = "client") -> dict[str, str]:
+        payload: dict[str, object] = {
+            "role": role,
+            "first_name": "Test",
+            "last_name": "User",
+            "document_type": "CC",
+            "document_number": phone,  # repeatable across accounts; fine per-phone here
+            "phone": phone,
+            "email": f"{phone.lstrip('+')}@barriapp.co",
+            "password": "supersecret",
+            "accept_habeas_data": True,
+        }
+        if role in ("client", "collaborator"):
+            payload["gender"] = "male"
+            payload["birth_date"] = "1990-01-01"
+        resp = await api.post("/api/v1/auth/register", json=payload)
         assert resp.status_code == 201, resp.text
         code = await get_redis().get(f"otp:{phone}")
         resp = await api.post("/api/v1/auth/verify-otp", json={"phone": phone, "code": code})

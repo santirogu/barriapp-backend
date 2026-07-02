@@ -16,7 +16,6 @@ from app.collaborators.models import (
 )
 from app.collaborators.schemas import AvailabilityUpdate, BecomeCollaborator, VerificationUpdate
 from app.core.errors import AppError
-from app.users import repository as users_repo
 from app.users.models import GeoPoint, Role, User
 from app.users.service import primary_role
 
@@ -50,6 +49,12 @@ def resolve_availability(update: AvailabilityUpdate) -> tuple[Availability, GeoP
 
 async def become_collaborator(user: User, data: BecomeCollaborator) -> CollaboratorProfile:
     assert user.id is not None  # authenticated, persisted user
+    if user.role != Role.COLLABORATOR:
+        raise AppError(
+            "Only collaborator accounts can submit a collaborator profile",
+            code="forbidden",
+            status_code=status.HTTP_403_FORBIDDEN,
+        )
     if await collab_repo.get_by_user_id(user.id) is not None:
         raise AppError("Already a collaborator", code="already_collaborator", status_code=409)
     profile = CollaboratorProfile(
@@ -128,23 +133,8 @@ async def verify(
     profile.updated_at = _utcnow()
     await profile.save()
 
-    # On approval, grant the collaborator role.
-    if data.status == VerificationStatus.APPROVED:
-        target = await users_repo.get_by_id(target_user_id)
-        if target is not None and Role.COLLABORATOR not in target.roles:
-            target.roles.append(Role.COLLABORATOR)
-            target.updated_at = _utcnow()
-            await target.save()
-            await audit.record(
-                module=AuditModule.USERS,
-                action="user.role.granted",
-                actor_id=admin.id,
-                actor_role=primary_role(admin),
-                target_type="user",
-                target_id=target_user_id,
-                changes={"role": "collaborator"},
-            )
-
+    # The collaborator role is set at registration; approval only flips the
+    # KYC verification status that gates whether they can operate.
     await audit.record(
         module=AuditModule.DELIVERY,
         action="collaborator.verification.changed",

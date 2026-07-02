@@ -8,6 +8,7 @@ from beanie import PydanticObjectId
 from app.core.errors import AppError
 from app.notifications import service as notifications_service
 from app.notifications.service import with_token
+from app.users.models import Role
 
 
 def _returns(value: object):
@@ -26,7 +27,7 @@ def test_with_token_dedup() -> None:
 
 @pytest.mark.req("N-2")
 async def test_mark_read_only_owner(monkeypatch: pytest.MonkeyPatch) -> None:
-    user = SimpleNamespace(id=PydanticObjectId(), roles=[])
+    user = SimpleNamespace(id=PydanticObjectId(), role=Role.CLIENT)
     other_notification = SimpleNamespace(user_id=PydanticObjectId(), read=False)
     monkeypatch.setattr(notifications_service.notif_repo, "get_by_id", _returns(other_notification))
 

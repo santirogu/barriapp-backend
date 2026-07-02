@@ -39,7 +39,7 @@ async def _order_platform_fee(
 async def test_premium_reduces_commission_and_cancel_reverts(
     api: AsyncClient, register_user: RegisterUser
 ) -> None:
-    seller_h = _auth(await register_user("+573110000001"))
+    seller_h = _auth(await register_user("+573110000001", "seller"))
     store = (
         await api.post(
             "/api/v1/stores",
@@ -82,7 +82,7 @@ async def test_premium_reduces_commission_and_cancel_reverts(
 
 @pytest.mark.req("SUB-2")
 async def test_non_owner_cannot_subscribe(api: AsyncClient, register_user: RegisterUser) -> None:
-    seller_h = _auth(await register_user("+573110000003"))
+    seller_h = _auth(await register_user("+573110000003", "seller"))
     store_id = (
         await api.post(
             "/api/v1/stores",

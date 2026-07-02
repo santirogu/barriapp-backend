@@ -22,7 +22,7 @@ def _utcnow() -> datetime:
 
 
 def _is_admin(user: User) -> bool:
-    return Role.SUPER_ADMIN in user.roles
+    return user.role == Role.SUPER_ADMIN
 
 
 def _record_status(errand: Errand, new_status: ErrandStatus, by: PydanticObjectId | None) -> None:
@@ -86,7 +86,7 @@ async def search_available(near: tuple[float, float], radius_meters: int) -> lis
 
 
 async def accept(user: User, errand_id: PydanticObjectId) -> Errand:
-    if Role.COLLABORATOR not in user.roles:
+    if user.role != Role.COLLABORATOR:
         raise AppError(
             "Only approved collaborators can accept errands",
             code="forbidden",

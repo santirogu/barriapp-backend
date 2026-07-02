@@ -254,6 +254,6 @@ async def get_payment(user: User, payment_id: PydanticObjectId) -> Payment:
     payment = await payments_repo.get_payment(payment_id)
     if payment is None:
         raise AppError("Payment not found", code="not_found", status_code=404)
-    if payment.payer_id != user.id and Role.SUPER_ADMIN not in user.roles:
+    if payment.payer_id != user.id and user.role != Role.SUPER_ADMIN:
         raise AppError("Forbidden", code="forbidden", status_code=status.HTTP_403_FORBIDDEN)
     return payment

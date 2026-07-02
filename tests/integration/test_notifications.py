@@ -18,7 +18,7 @@ def _auth(tokens: dict[str, str]) -> dict[str, str]:
 async def _accepted_order(
     api: AsyncClient, register_user: RegisterUser, seller_phone: str, client_phone: str
 ) -> dict[str, str]:
-    seller_h = _auth(await register_user(seller_phone))
+    seller_h = _auth(await register_user(seller_phone, "seller"))
     store = (
         await api.post(
             "/api/v1/stores",

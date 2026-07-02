@@ -12,9 +12,16 @@ async def _register_and_verify(api: AsyncClient, phone: str, password: str) -> d
     resp = await api.post(
         "/api/v1/auth/register",
         json={
+            "role": "client",
+            "first_name": "Ana",
+            "last_name": "Test",
+            "document_type": "CC",
+            "document_number": phone.lstrip("+"),
             "phone": phone,
+            "email": f"{phone.lstrip('+')}@barriapp.co",
             "password": password,
-            "full_name": "Ana Test",
+            "gender": "female",
+            "birth_date": "1990-01-01",
             "accept_habeas_data": True,
         },
     )
@@ -43,7 +50,7 @@ async def test_register_verify_and_get_profile(api: AsyncClient) -> None:
     body = resp.json()
     assert body["phone"] == phone
     assert body["status"] == "active"
-    assert body["roles"] == ["client"]
+    assert body["role"] == "client"
 
 
 @pytest.mark.req("A-3")
