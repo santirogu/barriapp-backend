@@ -69,6 +69,13 @@ async def become_collaborator(user: User, data: BecomeCollaborator) -> Collabora
     return profile
 
 
+async def list_collaborators(
+    *, verification_status: VerificationStatus | None, skip: int, limit: int
+) -> list[CollaboratorProfile]:
+    """Admin: list collaborator profiles (verification queue), optionally filtered."""
+    return await collab_repo.list_by_status(verification_status, skip=skip, limit=limit)
+
+
 async def get_my_profile(user: User) -> CollaboratorProfile:
     assert user.id is not None  # authenticated, persisted user
     profile = await collab_repo.get_by_user_id(user.id)
