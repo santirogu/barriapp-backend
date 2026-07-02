@@ -12,6 +12,7 @@ from typing import Any
 
 import structlog
 from fastapi import FastAPI, Request, status
+from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -58,11 +59,13 @@ def register_exception_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(RequestValidationError)
     async def _handle_validation(request: Request, exc: RequestValidationError) -> JSONResponse:
+        # jsonable_encoder makes the details JSON-safe: a custom validator that
+        # raises ValueError puts the (non-serializable) exception in `ctx`.
         return _error_response(
             status.HTTP_422_UNPROCESSABLE_ENTITY,
             "validation_error",
             "Request validation failed",
-            exc.errors(),
+            jsonable_encoder(exc.errors()),
         )
 
     @app.exception_handler(StarletteHTTPException)
