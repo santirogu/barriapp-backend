@@ -15,6 +15,18 @@ async def insert(profile: CollaboratorProfile) -> CollaboratorProfile:
     return await profile.insert()
 
 
+async def list_by_status(
+    verification_status: VerificationStatus | None = None,
+    *,
+    skip: int = 0,
+    limit: int = 50,
+) -> list[CollaboratorProfile]:
+    query = CollaboratorProfile.find()
+    if verification_status is not None:
+        query = query.find(CollaboratorProfile.verification_status == verification_status)
+    return await query.sort("-created_at").skip(skip).limit(limit).to_list()
+
+
 def build_available_near_query(near: tuple[float, float], radius_meters: int) -> dict[str, Any]:
     """Pure query builder: approved + online collaborators near a point (nearest-first)."""
     return {

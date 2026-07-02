@@ -47,6 +47,12 @@ async def test_onboarding_verification_and_go_online(
     # admin approves (promote a user to super_admin directly for the test)
     admin_h = _auth(await register_user("+573020000002"))
     await _promote_to_admin("+573020000002")
+
+    # admin sees the pending collaborator in the verification queue
+    queue = await api.get("/api/v1/admin/collaborators?status=pending", headers=admin_h)
+    assert queue.status_code == 200, queue.text
+    assert collab_user_id in [c["user_id"] for c in queue.json()]
+
     approved = await api.patch(
         f"/api/v1/collaborator/{collab_user_id}/verification",
         json={"status": "approved"},

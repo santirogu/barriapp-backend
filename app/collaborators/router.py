@@ -4,9 +4,10 @@ docs/COLLABORATOR_ONBOARDING.md."""
 from typing import Annotated
 
 from beanie import PydanticObjectId
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, status
 
 from app.collaborators import service
+from app.collaborators.models import VerificationStatus
 from app.collaborators.schemas import (
     AvailabilityUpdate,
     BecomeCollaborator,
@@ -19,6 +20,19 @@ from app.users.models import Role, User
 router = APIRouter(tags=["collaborators"])
 
 AdminUser = Annotated[User, Depends(require_roles(Role.SUPER_ADMIN))]
+
+
+@router.get("/admin/collaborators", response_model=list[CollaboratorProfilePublic])
+async def list_collaborators(
+    admin: AdminUser,
+    verification_status: VerificationStatus | None = Query(None, alias="status"),
+    page: int = Query(1, ge=1),
+    limit: int = Query(50, ge=1, le=200),
+) -> list[CollaboratorProfilePublic]:
+    profiles = await service.list_collaborators(
+        verification_status=verification_status, skip=(page - 1) * limit, limit=limit
+    )
+    return [CollaboratorProfilePublic.from_profile(p) for p in profiles]
 
 
 @router.post(
