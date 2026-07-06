@@ -214,7 +214,7 @@ requires-dist = [
     { name = "pytest-timeout", marker = "extra == 'dev'", specifier = ">=2.3" },
     { name = "redis", specifier = ">=5.2" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.7" },
-    { name = "sentry-sdk", extras = ["fastapi"], specifier = ">=2.18" },
+    { name = "sentry-sdk", extras = ["fastapi"], specifier = ">=2.64.0" },
     { name = "structlog", specifier = ">=24.4" },
     { name = "testcontainers", extras = ["mongodb", "redis"], marker = "extra == 'dev'", specifier = ">=4.14.2" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.49.0" },
